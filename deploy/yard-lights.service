@@ -1,0 +1,19 @@
+# Auto-start on the Ubuntu server:
+#   sudo cp deploy/yard-lights.service /etc/systemd/system/
+#   (edit User= and WorkingDirectory= to match)
+#   sudo systemctl daemon-reload && sudo systemctl enable --now yard-lights
+[Unit]
+Description=Yard Lights (Govee Christmas light controller)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=haunt
+WorkingDirectory=/home/haunt/yard-lights
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+Environment=PORT=3100
+
+[Install]
+WantedBy=multi-user.target

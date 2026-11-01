@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1a14">
+<title>Yard Lights</title>
+<style>
+  :root {
+    --bg: #0d1a14; --panel: #15261d; --panel2: #1c3226; --line: #2a4535;
+    --text: #eef4ef; --dim: #93a99b; --red: #e23b3b; --green: #2fbf62; --gold: #f2c14e;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { padding-bottom: 80px; }
+  header { position: sticky; top: 0; z-index: 5; background: linear-gradient(var(--bg) 85%, transparent); padding: 12px 16px 10px; }
+  .top { display: flex; align-items: center; gap: 12px; }
+  h1 { font-size: 20px; margin: 0; flex: 1; letter-spacing: .3px; }
+  h1 span { color: var(--gold); }
+  .power { border: 0; border-radius: 999px; padding: 10px 22px; font-weight: 700; font-size: 16px; color: #fff; background: #3a4a41; }
+  .power.on { background: var(--green); box-shadow: 0 0 18px rgba(47,191,98,.45); }
+  .strip { display: flex; gap: 6px; margin-top: 12px; }
+  .strip i { flex: 1; height: 14px; border-radius: 7px; background: #000; transition: background .18s linear; border: 1px solid var(--line); }
+  .sub { color: var(--dim); font-size: 13px; margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; }
+  main { padding: 0 16px; max-width: 720px; margin: 0 auto; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 6; }
+  nav button { flex: 1; background: none; border: 0; color: var(--dim); padding: 14px 0; font-size: 15px; font-weight: 600; }
+  nav button.active { color: var(--gold); }
+  section { display: none; } section.active { display: block; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin: 12px 0; }
+  .card h2 { font-size: 15px; margin: 0 0 10px; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row + .row { margin-top: 10px; }
+  .grow { flex: 1; min-width: 0; }
+  label.lbl { font-size: 13px; color: var(--dim); display: block; margin-bottom: 4px; }
+  input[type=range] { width: 100%; accent-color: var(--gold); }
+  input[type=text], input[type=time], input[type=number], select { width: 100%; background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 16px; }
+  button.btn { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 15px; font-weight: 600; }
+  button.btn.primary { background: var(--red); border-color: var(--red); }
+  button.btn.small { padding: 6px 10px; font-size: 13px; }
+  button.btn:disabled { opacity: .45; }
+  .light { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+  .light:last-child { border-bottom: 0; }
+  .light.sel { background: rgba(242,193,78,.08); border-radius: 10px; }
+  .dot { width: 30px; height: 30px; border-radius: 50%; background: #000; border: 2px solid var(--line); flex: none; transition: background .18s linear; }
+  .light .name { font-weight: 600; }
+  .light .meta { color: var(--dim); font-size: 13px; }
+  .check { width: 24px; height: 24px; accent-color: var(--gold); flex: none; }
+  .switch { position: relative; width: 50px; height: 30px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: #3a4a41; border-radius: 30px; transition: .2s; }
+  .switch span::before { content: ""; position: absolute; width: 24px; height: 24px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+  .switch input:checked + span { background: var(--green); }
+  .switch input:checked + span::before { transform: translateX(20px); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: flex; gap: 3px; padding: 6px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); align-items: center; font-size: 13px; color: var(--text); }
+  .chip.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+  .chip b { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .swatches { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .swatches input[type=color] { width: 44px; height: 44px; border: 0; padding: 0; background: none; border-radius: 10px; }
+  .looks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .look { text-align: left; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; color: var(--text); font-size: 15px; font-weight: 600; }
+  .look.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+  .look small { display: block; color: var(--dim); font-weight: 400; margin-top: 4px; font-size: 12px; }
+  .look .bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .look .bar i { flex: 1; }
+  .pl { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .pl:last-child { border-bottom: 0; }
+  .dev { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .dev:last-child { border-bottom: 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .note { color: var(--dim); font-size: 13px; margin: 8px 0 0; }
+  .log { font: 12px/1.5 ui-monospace, Menlo, monospace; color: var(--dim); max-height: 220px; overflow: auto; white-space: pre-wrap; }
+  .toast { position: fixed; left: 16px; right: 16px; bottom: 86px; background: var(--red); color: #fff; padding: 12px 14px; border-radius: 12px; font-weight: 600; display: none; z-index: 9; }
+  .empty { color: var(--dim); text-align: center; padding: 18px 0; }
+  .order button { padding: 4px 8px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>Yard <span>Lights</span></h1>
+    <button id="power" class="power">OFF</button>
+  </div>
+  <div class="strip" id="strip"></div>
+  <div class="sub"><span id="nowLook">—</span><span id="conn">connecting…</span></div>
+</header>
+
+<main>
+  <!-- LIGHTS -->
+  <section id="tab-lights" class="active">
+    <div class="card">
+      <div class="row">
+        <div class="grow"><label class="lbl">Master brightness <b id="masterVal"></b></label><input id="master" type="range" min="1" max="100"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:6px">
+        <h2 class="grow" style="margin:0">Lights</h2>
+        <button class="btn small" id="selAll">Select all</button>
+      </div>
+      <div id="lights"></div>
+    </div>
+
+    <div class="card" id="editor">
+      <h2 id="edTitle">Edit</h2>
+      <div class="row"><div class="grow"><label class="lbl">Effect</label><select id="edEffect"></select><p class="note" id="edDesc"></p></div></div>
+      <div class="row"><div class="grow"><label class="lbl">Palette</label><div class="chips" id="edPalettes"></div></div></div>
+      <div class="row"><div class="grow"><label class="lbl">Colours (first = main colour)</label><div class="swatches" id="edColors"></div></div></div>
+      <div class="row"><div class="grow"><label class="lbl">Brightness <b id="edBriVal"></b></label><input id="edBri" type="range" min="0" max="100"></div></div>
+      <div class="row"><div class="grow"><label class="lbl">Speed <b id="edSpeedVal"></b></label><input id="edSpeed" type="range" min="0" max="100"></div></div>
+      <div class="row">
+        <button class="btn" id="edOn">Turn on</button>
+        <button class="btn" id="edOff">Turn off</button>
+        <button class="btn" id="edIdent">Find it</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOOKS -->
+  <section id="tab-looks">
+    <div class="card">
+      <h2>Looks</h2>
+      <div class="looks" id="looks"></div>
+      <div class="row" style="margin-top:12px">
+        <input class="grow" id="lookName" type="text" placeholder="Name this look">
+        <button class="btn primary" id="lookSave">Save current</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Auto-rotate</h2>
+      <div class="row">
+        <div class="grow">Change the look every <input id="rotMin" type="number" min="1" max="240" style="width:80px;display:inline-block"> min</div>
+        <label class="switch"><input id="rotOn" type="checkbox"><span></span></label>
+      </div>
+      <p class="note" id="rotNext"></p>
+      <div id="playlist"></div>
+      <div class="row" style="margin-top:10px"><button class="btn" id="rotNextBtn">Next look now</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Schedule</h2>
+      <div class="row">
+        <div class="grow">Turn on and off every day</div>
+        <label class="switch"><input id="schOn" type="checkbox"><span></span></label>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div><label class="lbl">On at</label><input id="schStart" type="time"></div>
+        <div><label class="lbl">Off at</label><input id="schEnd" type="time"></div>
+      </div>
+      <p class="note" id="schTz"></p>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+  <section id="tab-setup">
+    <div class="card">
+      <h2>Find lights</h2>
+      <div class="row"><button class="btn primary" id="scan">Scan network</button><span class="note" id="scanNote" style="margin:0">Lights need LAN Control on in the Govee app.</span></div>
+      <div id="found" style="margin-top:10px"></div>
+      <h2 style="margin-top:16px">Add by IP</h2>
+      <div class="grid2">
+        <input id="addIp" type="text" inputmode="decimal" placeholder="192.168.1.50">
+        <input id="addName" type="text" placeholder="Name (Porch)">
+      </div>
+      <div class="row">
+        <div class="grow"><label class="lbl">Lights on this controller</label><select id="addSegs"><option value="1">1</option><option value="2">2 (Spotlight 2-pack)</option><option value="3">3</option><option value="4">4</option></select></div>
+        <button class="btn primary" id="addBtn" style="align-self:flex-end">Add</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Controllers</h2>
+      <div id="devices"></div>
+    </div>
+
+    <div class="card">
+      <h2>Yard order (left → right)</h2>
+      <p class="note" style="margin-top:0">Chases and waves travel in this order.</p>
+      <div id="order"></div>
+    </div>
+
+    <div class="card">
+      <h2>Music</h2>
+      <div class="row">
+        <div class="grow">Let music drive beat effects</div>
+        <label class="switch"><input id="musicOn" type="checkbox"><span></span></label>
+      </div>
+      <p class="note" id="musicNote">Off. When on, anything that POSTs <code>{level, beat}</code> to <code>/api/music</code> drives Chase, Alternate, Sparkle and Music Pulse.</p>
+    </div>
+
+    <div class="card">
+      <h2>Log</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button data-tab="lights" class="active">Lights</button>
+  <button data-tab="looks">Looks</button>
+  <button data-tab="setup">Setup</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let S = null, found = [], logs = [];
+const selected = new Set();
+let editing = false;   // don't redraw the editor while a slider is held
+
+// speed slider 0..100 <-> 0.25..4 (log scale, 50 = 1x)
+const toSpeed = (v) => Math.round(Math.pow(2, (v - 50) / 25) * 100) / 100;
+const fromSpeed = (s) => Math.round(50 + 25 * Math.log2(s));
+
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = 'none', 3500); }
+async function api(path, body, method = 'POST') {
+  try {
+    const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Failed');
+    if (j.status) { S = j.status; render(); }
+    return j;
+  } catch (e) { toast(e.message); return null; }
+}
+// Slider spam guard: send at most every 120 ms, always the last value.
+function throttle(fn, ms = 120) { let t = 0, pend = null, timer; return (...a) => { pend = a; const now = Date.now(); if (now - t >= ms) { t = now; fn(...pend); pend = null; } else { clearTimeout(timer); timer = setTimeout(() => { t = Date.now(); if (pend) fn(...pend); pend = null; }, ms - (now - t)); } }; }
+
+// ── WebSocket ──
+function connect() {
+  const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
+  ws.onopen = () => { $('#conn').textContent = 'connected'; };
+  ws.onclose = () => { $('#conn').textContent = 'reconnecting…'; setTimeout(connect, 1500); };
+  ws.onmessage = (ev) => {
+    const m = JSON.parse(ev.data);
+    if (m.type === 'status') { S = m.data; render(); }
+    else if (m.type === 'preview') paintPreview(m.data);
+    else if (m.type === 'found') { found = m.data; renderFound(); }
+    else if (m.type === 'logs') { logs = m.data; renderLog(); }
+    else if (m.type === 'log') { logs.push(m.data); if (logs.length > 200) logs.shift(); renderLog(); }
+  };
+}
+
+function paintPreview(colors) {
+  for (const [id, c] of Object.entries(colors)) {
+    const css = `rgb(${c.r},${c.g},${c.b})`;
+    document.querySelectorAll(`[data-live="${CSS.escape(id)}"]`).forEach(el => el.style.background = css);
+  }
+}
+function blackout() { document.querySelectorAll('[data-live]').forEach(el => el.style.background = '#000'); }
+
+// ── Render ──
+function render() {
+  if (!S) return;
+  const p = $('#power'); p.textContent = S.running ? 'ON' : 'OFF'; p.classList.toggle('on', S.running);
+  if (!S.running) setTimeout(blackout, 50);
+  $('#strip').innerHTML = S.lights.map(l => `<i data-live="${esc(l.id)}" title="${esc(l.name)}"></i>`).join('') || '<i></i>';
+  const cur = S.looks.find(l => l.id === S.current);
+  $('#nowLook').textContent = cur ? cur.name : (S.lights.length ? 'Custom' : 'No lights yet — go to Setup');
+  if (document.activeElement !== $('#master')) { $('#master').value = S.master; }
+  $('#masterVal').textContent = S.master + '%';
+  // keep selection valid
+  for (const id of [...selected]) if (!S.lights.some(l => l.id === id)) selected.delete(id);
+  renderLights(); renderEditor(); renderLooks(); renderDevices(); renderFound();
+}
+
+function effName(id) { return (S.effects.find(e => e.id === id) || {}).name || id; }
+
+function renderLights() {
+  const box = $('#lights');
+  if (!S.lights.length) { box.innerHTML = '<div class="empty">No lights yet. Add them in Setup.</div>'; return; }
+  box.innerHTML = S.lights.map(l => `
+    <div class="light ${selected.has(l.id) ? 'sel' : ''}" data-id="${esc(l.id)}">
+      <input type="checkbox" class="check" data-sel="${esc(l.id)}" ${selected.has(l.id) ? 'checked' : ''}>
+      <div class="dot" data-live="${esc(l.id)}"></div>
+      <div class="grow" data-pick="${esc(l.id)}">
+        <div class="name">${esc(l.name)}</div>
+        <div class="meta">${l.on ? `${esc(effName(l.effect))} · ${l.bri}%` : 'off'}</div>
+      </div>
+      <label class="switch"><input type="checkbox" data-on="${esc(l.id)}" ${l.on ? 'checked' : ''}><span></span></label>
+    </div>`).join('');
+  $('#selAll').textContent = selected.size === S.lights.length ? 'Clear' : 'Select all';
+}
+
+function targets() { return [...selected]; }
+function renderEditor() {
+  const ed = $('#editor');
+  const ids = targets();
+  if (!ids.length) { ed.style.display = S.lights.length ? 'block' : 'none'; ed.style.opacity = .5; ed.style.pointerEvents = 'none'; $('#edTitle').textContent = 'Tick lights above to edit them'; }
+  else { ed.style.display = 'block'; ed.style.opacity = 1; ed.style.pointerEvents = 'auto'; $('#edTitle').textContent = ids.length === 1 ? `Edit: ${S.lights.find(l => l.id === ids[0]).name}` : `Edit ${ids.length} lights`; }
+  if (editing) return;
+  const L = S.lights.find(l => l.id === ids[0]) || S.lights[0];
+  if (!L) return;
+  const sel = $('#edEffect');
+  sel.innerHTML = S.effects.map(e => `<option value="${e.id}" ${e.id === L.effect ? 'selected' : ''}>${esc(e.name)}</option>`).join('');
+  $('#edDesc').textContent = (S.effects.find(e => e.id === L.effect) || {}).desc || '';
+  const palKey = (arr) => arr.join(',').toLowerCase();
+  $('#edPalettes').innerHTML = S.palettes.map(p => `<button class="chip ${palKey(p.colors) === palKey(L.palette) ? 'on' : ''}" data-pal="${p.id}">${p.colors.map(c => `<b style="background:${c}"></b>`).join('')} ${esc(p.name)}</button>`).join('');
+  $('#edColors').innerHTML = L.palette.map((c, i) => `<input type="color" value="${c}" data-ci="${i}">`).join('')
+    + (L.palette.length < 6 ? '<button class="btn small" id="addColor">+</button>' : '')
+    + (L.palette.length > 1 ? '<button class="btn small" id="rmColor">−</button>' : '');
+  $('#edBri').value = L.bri; $('#edBriVal').textContent = L.bri + '%';
+  $('#edSpeed').value = fromSpeed(L.speed); $('#edSpeedVal').textContent = L.speed + '×';
+}
+
+function renderLooks() {
+  const palOf = (l) => {
+    if (l.builtin) return (S.palettes.find(p => p.id === l.palette) || { colors: [] }).colors;
+    return [];
+  };
+  $('#looks').innerHTML = S.looks.map(l => `
+    <button class="look ${l.id === S.current ? 'on' : ''}" data-look="${esc(l.id)}">${esc(l.name)}
+      <small>${l.builtin ? esc(effName(l.effect)) : 'Saved look'}</small>
+      <div class="bar">${(palOf(l).length ? palOf(l) : ['#555']).map(c => `<i style="background:${c}"></i>`).join('')}</div>
+    </button>`).join('');
+  if (document.activeElement !== $('#rotMin')) $('#rotMin').value = S.rotate.minutes;
+  $('#rotOn').checked = S.rotate.enabled;
+  $('#rotNext').textContent = S.rotate.enabled && S.rotate.nextAt ? `Next change at ${new Date(S.rotate.nextAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : (S.rotate.enabled && !S.running ? 'Starts when the lights are on.' : '');
+  $('#playlist').innerHTML = S.looks.map(l => `
+    <div class="pl"><input type="checkbox" class="check" data-pl="${esc(l.id)}" ${S.rotate.list.includes(l.id) ? 'checked' : ''}>
+      <div class="grow">${esc(l.name)}</div>
+      ${l.builtin ? '' : `<button class="btn small" data-dellook="${esc(l.id)}">Delete</button>`}
+    </div>`).join('');
+  $('#schOn').checked = S.schedule.enabled;
+  if (document.activeElement !== $('#schStart')) $('#schStart').value = S.schedule.on.padStart(5, '0');
+  if (document.activeElement !== $('#schEnd')) $('#schEnd').value = S.schedule.off.padStart(5, '0');
+  $('#schTz').textContent = `Time zone: ${S.schedule.tz}`;
+  $('#musicOn').checked = S.music.enabled;
+  $('#musicNote').innerHTML = S.music.enabled
+    ? (S.music.live ? '🎵 Music feed is live.' : 'On, waiting for a music feed (POST <code>{level, beat}</code> to <code>/api/music</code>). Effects run on their own clock until it arrives.')
+    : 'Off. When on, anything that POSTs <code>{level, beat}</code> to <code>/api/music</code> drives Chase, Alternate, Sparkle and Music Pulse.';
+}
+
+function ago(ms) { if (!ms) return 'not heard from yet'; const s = Math.round((Date.now() - ms) / 1000); return s < 90 ? 'seen just now' : `seen ${Math.round(s / 60)} min ago`; }
+function renderDevices() {
+  const box = $('#devices');
+  if (!S.devices.length) { box.innerHTML = '<div class="empty">None yet.</div>'; }
+  else box.innerHTML = S.devices.map(d => `
+    <div class="dev" data-dev="${esc(d.id)}">
+      <div class="grid2">
+        <div><label class="lbl">Name</label><input type="text" value="${esc(d.name)}" data-dname></div>
+        <div><label class="lbl">IP</label><input type="text" inputmode="decimal" value="${esc(d.ip)}" data-dip></div>
+      </div>
+      <div class="row">
+        <div class="grow"><label class="lbl">Lights on it</label><select data-dsegs>${[1,2,3,4,5,6,7,8].map(n => `<option ${n === d.segments ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+        <button class="btn small" data-dsave style="align-self:flex-end">Save</button>
+        <button class="btn small" data-dprobe style="align-self:flex-end">Test</button>
+        <button class="btn small" data-ddel style="align-self:flex-end">Remove</button>
+      </div>
+      <p class="note">${esc(d.sku || 'Govee')} · ${ago(d.lastSeen)}</p>
+    </div>`).join('');
+  $('#order').innerHTML = S.lights.length ? S.lights.map((l, i) => `
+    <div class="pl order"><div class="dot" data-live="${esc(l.id)}" style="width:20px;height:20px"></div>
+      <div class="grow">${i + 1}. <input type="text" value="${esc(l.name)}" data-lname="${esc(l.id)}" style="display:inline-block;width:70%;padding:6px"></div>
+      <button class="btn small" data-up="${i}" ${i ? '' : 'disabled'}>↑</button>
+      <button class="btn small" data-down="${i}" ${i < S.lights.length - 1 ? '' : 'disabled'}>↓</button>
+    </div>`).join('') : '<div class="empty">No lights yet.</div>';
+}
+function renderFound() {
+  if (!S) return;
+  const known = new Set(S.devices.map(d => d.ip));
+  const fresh = found.filter(f => !known.has(f.ip));
+  $('#found').innerHTML = fresh.map(f => `
+    <div class="pl"><div class="grow"><b>${esc(f.sku || 'Govee light')}</b> <span class="note">${esc(f.ip)}</span></div>
+      <button class="btn small" data-addfound="${esc(f.ip)}" data-sku="${esc(f.sku)}">Add</button></div>`).join('');
+}
+function renderLog() { const el = $('#log'); el.textContent = logs.slice().reverse().map(l => `${new Date(l.at).toLocaleTimeString()}  ${l.msg}`).join('\n'); }
+
+// ── Events ──
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('active', x === b));
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('active', s.id === 'tab-' + b.dataset.tab));
+  window.scrollTo(0, 0);
+});
+$('#power').onclick = () => api(S && S.running ? '/api/stop' : '/api/start');
+const sendMaster = throttle((v) => api('/api/master', { value: v }));
+$('#master').oninput = (e) => { $('#masterVal').textContent = e.target.value + '%'; sendMaster(+e.target.value); };
+
+$('#lights').addEventListener('click', (e) => {
+  const t = e.target;
+  if (t.dataset.on) return api('/api/lights', { ids: [t.dataset.on], on: t.checked });
+  const sel = t.dataset.sel || (t.closest('[data-pick]') && t.closest('[data-pick]').dataset.pick);
+  if (sel) {
+    if (t.dataset.sel) { t.checked ? selected.add(sel) : selected.delete(sel); }
+    else { if (selected.has(sel) && selected.size === 1) selected.clear(); else { selected.clear(); selected.add(sel); } }
+    renderLights(); renderEditor();
+  }
+});
+$('#selAll').onclick = () => { if (selected.size === S.lights.length) selected.clear(); else S.lights.forEach(l => selected.add(l.id)); renderLights(); renderEditor(); };
+
+const patchSel = (patch) => targets().length && api('/api/lights', { ids: targets(), ...patch });
+$('#edEffect').onchange = (e) => patchSel({ effect: e.target.value, on: true });
+$('#edPalettes').onclick = (e) => { const b = e.target.closest('[data-pal]'); if (b) patchSel({ palette: b.dataset.pal }); };
+function currentPalette() { return [...document.querySelectorAll('#edColors input[type=color]')].map(i => i.value); }
+const sendColors = throttle(() => patchSel({ palette: currentPalette() }), 150);
+$('#edColors').addEventListener('input', (e) => { if (e.target.dataset.ci != null) { editing = true; sendColors(); } });
+$('#edColors').addEventListener('change', () => { editing = false; });
+$('#edColors').addEventListener('click', (e) => {
+  if (e.target.id === 'addColor') { const p = currentPalette(); p.push('#ffffff'); patchSel({ palette: p }); }
+  if (e.target.id === 'rmColor') { const p = currentPalette(); p.pop(); patchSel({ palette: p }); }
+});
+const sendBri = throttle((v) => patchSel({ bri: v }));
+$('#edBri').oninput = (e) => { editing = true; $('#edBriVal').textContent = e.target.value + '%'; sendBri(+e.target.value); };
+const sendSpeed = throttle((v) => patchSel({ speed: v }));
+$('#edSpeed').oninput = (e) => { editing = true; const s = toSpeed(+e.target.value); $('#edSpeedVal').textContent = s + '×'; sendSpeed(s); };
+['#edBri', '#edSpeed'].forEach(s => $(s).addEventListener('change', () => { editing = false; }));
+$('#edOn').onclick = () => patchSel({ on: true });
+$('#edOff').onclick = () => patchSel({ on: false });
+$('#edIdent').onclick = () => { const ids = targets(); if (ids.length !== 1) return toast('Tick just one light to find it'); api('/api/lights/identify', { id: ids[0] }); };
+
+$('#looks').onclick = (e) => { const b = e.target.closest('[data-look]'); if (b) api('/api/looks/apply', { id: b.dataset.look }); };
+$('#lookSave').onclick = async () => { const n = $('#lookName').value.trim(); if (!n) return toast('Type a name first'); if (await api('/api/looks/save', { name: n })) $('#lookName').value = ''; };
+$('#rotOn').onchange = (e) => api('/api/rotate', { enabled: e.target.checked });
+$('#rotMin').onchange = (e) => api('/api/rotate', { minutes: +e.target.value });
+$('#rotNextBtn').onclick = () => api('/api/looks/next');
+$('#playlist').addEventListener('click', (e) => {
+  const t = e.target;
+  if (t.dataset.pl) { const list = S.looks.map(l => l.id).filter(id => id === t.dataset.pl ? t.checked : S.rotate.list.includes(id)); api('/api/rotate', { list }); }
+  if (t.dataset.dellook && confirm('Delete this look?')) api('/api/looks/delete', { id: t.dataset.dellook });
+});
+$('#schOn').onchange = (e) => api('/api/schedule', { enabled: e.target.checked });
+$('#schStart').onchange = (e) => api('/api/schedule', { on: e.target.value });
+$('#schEnd').onchange = (e) => api('/api/schedule', { off: e.target.value });
+$('#musicOn').onchange = (e) => api('/api/music/enable', { enabled: e.target.checked });
+
+$('#scan').onclick = () => { api('/api/scan'); $('#scanNote').textContent = 'Scanning…'; setTimeout(() => { $('#scanNote').textContent = found.length ? '' : 'Nothing answered. Check LAN Control in the Govee app, or add by IP.'; }, 4000); };
+$('#found').onclick = (e) => {
+  const b = e.target.closest('[data-addfound]'); if (!b) return;
+  const segs = prompt('How many lights on this controller? (2 for a Spotlight 2-pack)', '2'); if (segs === null) return;
+  const name = prompt('Name it (e.g. Porch)', b.dataset.sku || 'Light'); if (name === null) return;
+  api('/api/devices', { ip: b.dataset.addfound, sku: b.dataset.sku, name, segments: +segs || 1 });
+};
+$('#addBtn').onclick = async () => { if (await api('/api/devices', { ip: $('#addIp').value, name: $('#addName').value, segments: +$('#addSegs').value })) { $('#addIp').value = ''; $('#addName').value = ''; } };
+$('#devices').addEventListener('click', async (e) => {
+  const box = e.target.closest('[data-dev]'); if (!box) return;
+  const id = box.dataset.dev;
+  if (e.target.matches('[data-dsave]')) api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, segments: +box.querySelector('[data-dsegs]').value });
+  if (e.target.matches('[data-ddel]') && confirm('Remove this controller?')) api(`/api/devices/${id}`, null, 'DELETE');
+  if (e.target.matches('[data-dprobe]')) { e.target.textContent = '…'; const r = await api(`/api/devices/${id}/probe`); e.target.textContent = 'Test'; if (r) toast(r.status.ok ? `Answered: ${r.status.status.onOff ? 'on' : 'off'}, brightness ${r.status.status.brightness}` : 'No answer — check the IP and LAN Control'); }
+});
+$('#order').addEventListener('click', (e) => {
+  const o = S.lights.map(l => l.id);
+  const i = e.target.dataset.up != null ? +e.target.dataset.up : e.target.dataset.down != null ? +e.target.dataset.down : null;
+  if (i == null) return;
+  const j = e.target.dataset.up != null ? i - 1 : i + 1;
+  [o[i], o[j]] = [o[j], o[i]];
+  api('/api/lights/order', { order: o });
+});
+$('#order').addEventListener('change', (e) => { if (e.target.dataset.lname) api('/api/lights', { ids: [e.target.dataset.lname], name: e.target.value }); });
+
+connect();
+</script>
+</body>
+</html>
