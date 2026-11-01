@@ -10,10 +10,12 @@ const { WebSocketServer } = require('ws');
 const { createGovee } = require('./lib/govee');
 const { createEngine } = require('./lib/engine');
 const { createLlama } = require('./lib/llama');
+const { createGoveeCloud } = require('./lib/goveeCloud');
 const { createAssistant } = require('./lib/assistant');
 
 const PORT = Number(process.env.PORT) || 3100;
 const DATA = process.env.CHRISTMAS_LIGHTS_CONFIG || path.join(__dirname, 'config.json');
+const SECRETS = process.env.CHRISTMAS_LIGHTS_SECRETS || path.join(__dirname, 'secrets.json');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -38,7 +40,10 @@ const govee = createGovee({
   log,
   onFound: (d) => { const isNew = !found.has(d.ip); found.set(d.ip, { ...d, at: Date.now() }); if (isNew) log(`Found ${d.sku || 'Govee light'} at ${d.ip}`); broadcast({ type: 'found', data: [...found.values()] }); },
 });
-const engine = createEngine({ file: DATA, govee, log, onChange: () => broadcast({ type: 'status', data: engine.status() }) });
+let engine = null;
+const sendStatus = () => engine && broadcast({ type: 'status', data: engine.status() });
+const cloud = createGoveeCloud({ file: SECRETS, log, onChange: () => { sendStatus(); broadcast({ type: 'cloud', data: cloud.status() }); } });
+engine = createEngine({ file: DATA, govee, log, onChange: sendStatus, external: { looks: () => cloud.looks(), play: (k) => cloud.play(k), power: (on) => cloud.power(on) } });
 
 // Ask the elves: plain-English commands through local Llama.
 const aiState = () => ({ ...llama.status(), history: assistant.history() });
@@ -55,6 +60,7 @@ wss.on('connection', (ws) => {
   ws.send(JSON.stringify({ type: 'found', data: [...found.values()] }));
   ws.send(JSON.stringify({ type: 'logs', data: logs }));
   ws.send(JSON.stringify({ type: 'ai', data: aiState() }));
+  ws.send(JSON.stringify({ type: 'cloud', data: cloud.status() }));
 });
 
 const route = (fn) => async (req, res) => {
@@ -89,6 +95,16 @@ app.post('/api/schedule', route((b) => engine.setSchedule(b)));
 // Music: enable/disable, and the feed itself ({ level, beat, bpm }).
 app.post('/api/music/enable', route(({ enabled }) => engine.setMusic({ enabled })));
 app.post('/api/music', (req, res) => { engine.music(req.body || {}); res.json({ ok: true }); });
+
+// Govee account (cloud scenes + DIYs from the Govee app).
+const cloudRoute = (fn) => async (req, res) => {
+  try { await fn(req.body || {}); res.json({ ok: true, cloud: cloud.status(), status: engine.status() }); }
+  catch (e) { res.status(409).json({ ok: false, error: e.message }); }
+};
+app.get('/api/govee', (req, res) => res.json({ ok: true, cloud: cloud.status() }));
+app.post('/api/govee/key', cloudRoute(({ key }) => cloud.setKey(key)));
+app.post('/api/govee/refresh', cloudRoute(() => cloud.refresh()));
+app.post('/api/govee/favorites', cloudRoute(({ favorites }) => cloud.setFavorites(favorites)));
 
 // { text } -> { reply }
 app.post('/api/ask', async (req, res) => {

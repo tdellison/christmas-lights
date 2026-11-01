@@ -17,6 +17,9 @@ Govee LAN, ptReal and queue rules apply.
   `{actions:[]}` (schema-enforced, ids are enums); the app runs them and
   writes the reply. Keep the system prompt + examples static so Ollama's
   prefix cache holds, and keep Llama's output short: writing is the cost.
+- `lib/goveeCloud.js`: Govee Platform API (cloud) for Govee scenes + app
+  DIYs, offered to the engine as `govee:<kind>:<name>` looks. While one plays
+  the engine sends nothing. Key in `secrets.json`, never in git or the UI.
 - `public/index.html`: single-file phone UI over a WebSocket.
 
 Rules:

@@ -204,6 +204,12 @@
   header, .stage, main, nav, .toast { position: relative; }
   header { position: sticky; } nav, .toast { position: fixed; }
   main { z-index: 1; }
+  .look.gv .bar { border-top-color: #2c4a7a; }
+  .look.gv .bar i { width: 100%; height: 6px; border-radius: 3px; margin-top: 2px;
+    background: linear-gradient(90deg, #ff3b3b, #ffd23f, #36d46a, #3fa0ff, #ff7ad9); box-shadow: 0 0 8px rgba(255,255,255,.25); }
+  .gchips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 260px; overflow-y: auto; margin-top: 8px; }
+  .gchips button { font-size: 13px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); }
+  .gchips button.on { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
   .ask form { display: flex; gap: 8px; }
   .ask input { flex: 1; min-width: 0; }
   .ask .ideas { display: flex; gap: 6px; overflow-x: auto; margin-top: 10px; padding-bottom: 2px; scrollbar-width: none; }
@@ -349,6 +355,20 @@
     </div>
 
     <div class="card">
+      <h2>Govee account</h2>
+      <p class="note" style="margin-top:0">Plays Govee's own scenes and the DIYs you save in the Govee app (from Share Space). These go through Govee's cloud.</p>
+      <div class="row">
+        <input class="grow" id="gKey" type="password" autocomplete="off" placeholder="API key (Govee app → Profile → About Us)">
+        <button class="btn primary" id="gKeySave">Save</button>
+      </div>
+      <p class="note" id="gState"></p>
+      <div id="gMore" style="display:none">
+        <div class="row" style="margin-top:6px"><div class="grow note" style="margin:0">Tap scenes to show them in Looks. DIYs always show.</div><button class="btn small" id="gRefresh">Refresh</button></div>
+        <div class="gchips" id="gScenes"></div>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Yard order (left → right)</h2>
       <p class="note" style="margin-top:0">Chases and waves travel in this order.</p>
       <div id="order"></div>
@@ -380,7 +400,7 @@
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-let S = null, found = [], logs = [], AI = null, asking = null;
+let S = null, found = [], logs = [], AI = null, asking = null, G = null;
 let live = {};         // last preview colour per light, repainted after each re-render
 const selected = new Set();
 let editing = false;   // don't redraw the editor while a slider is held
@@ -414,6 +434,7 @@ function connect() {
     else if (m.type === 'found') { found = m.data; renderFound(); }
     else if (m.type === 'logs') { logs = m.data; renderLog(); }
     else if (m.type === 'ai') { AI = m.data; renderAi(); }
+    else if (m.type === 'cloud') { G = m.data; renderGovee(); }
     else if (m.type === 'log') { logs.push(m.data); if (logs.length > 200) logs.shift(); renderLog(); }
   };
 }
@@ -442,7 +463,7 @@ function render() {
       <span class="tag"><b>${i + 1}</b>${esc(l.name)}</span>
     </button>`).join('') || '<div class="empty">No lights on the string yet.</div>';
   const cur = S.looks.find(l => l.id === S.current);
-  $('#nowLook').textContent = cur ? cur.name : (S.lights.length ? 'Custom' : 'No lights yet — go to Setup');
+  $('#nowLook').textContent = cur ? cur.name + (cur.govee ? ' (Govee)' : '') : (S.lights.length ? 'Custom' : 'No lights yet — go to Setup');
   if (document.activeElement !== $('#master')) { $('#master').value = S.master; }
   $('#masterVal').textContent = S.master + '%';
   // keep selection valid
@@ -496,9 +517,9 @@ function renderLooks() {
     return [];
   };
   $('#looks').innerHTML = S.looks.map(l => `
-    <button class="look ${l.id === S.current ? 'on' : ''}" data-look="${esc(l.id)}">${esc(l.name)}
-      <small>${l.builtin ? esc(effName(l.effect)) : 'Saved look'}</small>
-      <div class="bar">${(palOf(l).length ? palOf(l) : ['#555']).map(c => `<i style="background:${c};color:${c}"></i>`).join('')}</div>
+    <button class="look ${l.govee ? 'gv' : ''} ${l.id === S.current ? 'on' : ''}" data-look="${esc(l.id)}">${esc(l.name)}
+      <small>${l.govee === 'diy' ? 'Your Govee DIY' : l.govee ? 'Govee scene' : l.builtin ? esc(effName(l.effect)) : 'Saved look'}</small>
+      <div class="bar">${l.govee ? '<i></i>' : (palOf(l).length ? palOf(l) : ['#555']).map(c => `<i style="background:${c};color:${c}"></i>`).join('')}</div>
     </button>`).join('');
   if (document.activeElement !== $('#rotMin')) $('#rotMin').value = S.rotate.minutes;
   $('#rotOn').checked = S.rotate.enabled;
@@ -563,6 +584,18 @@ function renderFound() {
         <option value="new">New pair</option>
       </select>
       <button class="btn small go" data-addfound="${esc(f.ip)}" data-sku="${esc(f.sku)}">Use</button></div>`).join('');
+}
+function renderGovee() {
+  if (!G) return;
+  $('#gKey').placeholder = G.enabled ? `Saved (${G.keyHint}) · paste a new key to change` : 'API key (Govee app → Profile → About Us)';
+  const nScenes = G.scenes.filter(x => x.kind === 'scene').length, nDiy = G.scenes.filter(x => x.kind === 'diy').length;
+  $('#gState').textContent = !G.enabled ? 'Not connected.'
+    : G.lastError ? `Problem: ${G.lastError}`
+    : G.loadedAt ? `Connected: ${G.devices.length} light${G.devices.length === 1 ? '' : 's'} (${G.devices.map(d => d.name).join(', ')}) · ${nScenes} scenes · ${nDiy} DIY${nDiy === 1 ? '' : 's'}`
+    : 'Connecting…';
+  $('#gMore').style.display = G.enabled && G.loadedAt ? 'block' : 'none';
+  $('#gScenes').innerHTML = G.scenes.slice().sort((a, b) => (b.kind === 'diy') - (a.kind === 'diy'))
+    .map(x => `<button class="${x.fav ? 'on' : ''}" data-gfav="${esc(x.name)}" ${x.kind === 'diy' ? 'disabled' : ''}>${x.kind === 'diy' ? '★ ' : ''}${esc(x.name)}</button>`).join('');
 }
 function renderAi() {
   if (!AI) return;
@@ -670,6 +703,19 @@ $('#order').addEventListener('click', (e) => {
   api('/api/lights/order', { order: o });
 });
 $('#order').addEventListener('change', (e) => { if (e.target.dataset.lname) api('/api/lights', { ids: [e.target.dataset.lname], name: e.target.value }); });
+
+$('#gKeySave').onclick = async () => {
+  const key = $('#gKey').value.trim(); if (!key) return toast('Paste the key first');
+  $('#gState').textContent = 'Checking…';
+  const r = await api('/api/govee/key', { key });
+  if (r) { $('#gKey').value = ''; G = r.cloud; renderGovee(); }
+};
+$('#gRefresh').onclick = async () => { $('#gRefresh').textContent = '…'; const r = await api('/api/govee/refresh'); $('#gRefresh').textContent = 'Refresh'; if (r) { G = r.cloud; renderGovee(); } };
+$('#gScenes').onclick = async (e) => {
+  const b = e.target.closest('[data-gfav]'); if (!b || !G) return;
+  const favs = G.scenes.filter(x => x.kind === 'scene' && (x.name === b.dataset.gfav ? !x.fav : x.fav)).map(x => x.name);
+  const r = await api('/api/govee/favorites', { favorites: favs }); if (r) { G = r.cloud; renderGovee(); }
+};
 
 // ── Ask the elves ──
 async function ask(text) {
