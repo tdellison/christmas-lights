@@ -1,8 +1,7 @@
 # christmas-lights: notes for Claude Code
 
 Christmas light controller for Govee LAN lights. Lights only, music optional.
-It was split out of haunt-ctrl's `lights/lightMode.js`, so the same Govee
-LAN, ptReal and queue rules apply.
+Govee LAN, ptReal and queue rules apply.
 
 - `lib/govee.js`: UDP. Per-IP queue with a 50 ms gap (controllers drop
   packets above about 20/s). `segments()` sends ptReal frames: one packet, one
@@ -17,6 +16,6 @@ LAN, ptReal and queue rules apply.
 
 Rules:
 - Never send faster than the tick. Never queue a backlog of effect frames.
-- Port 3100. Govee listen port 4002 clashes with haunt-ctrl (retired for the
-  season, being redesigned), so never run both at once.
+- Port 3100. Govee listen port 4002 clashes with any other Govee LAN
+  app, so never run two at once.
 - Owner prefers short answers and no prices.

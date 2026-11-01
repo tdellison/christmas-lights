@@ -8,8 +8,8 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-User=haunt
-WorkingDirectory=/home/haunt/christmas-lights
+User=tdellison
+WorkingDirectory=/home/tdellison/christmas-lights
 ExecStart=/usr/bin/node server.js
 Restart=always
 RestartSec=5

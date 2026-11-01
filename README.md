@@ -11,8 +11,8 @@ npm install
 npm start          # http://<server-ip>:3100
 ```
 
-Port 3100 so it can run next to haunt-ctrl (3000). Both use the Govee LAN
-port 4002, so **only run one of them at a time.**
+Port 3100. It listens on the Govee LAN port 4002, so **don't run another
+Govee LAN app on the same machine at the same time.**
 
 Auto-start: see `deploy/christmas-lights.service`.
 
