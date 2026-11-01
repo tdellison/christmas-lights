@@ -204,6 +204,22 @@
   header, .stage, main, nav, .toast { position: relative; }
   header { position: sticky; } nav, .toast { position: fixed; }
   main { z-index: 1; }
+  .ask form { display: flex; gap: 8px; }
+  .ask input { flex: 1; min-width: 0; }
+  .ask .ideas { display: flex; gap: 6px; overflow-x: auto; margin-top: 10px; padding-bottom: 2px; scrollbar-width: none; }
+  .ask .ideas::-webkit-scrollbar { display: none; }
+  .ask .ideas button { flex: none; font-size: 13px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); color: var(--warm); }
+  .ask .talk { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+  .ask .talk:empty { display: none; }
+  .msg { max-width: 85%; padding: 8px 12px; border-radius: 14px; font-size: 14px; line-height: 1.35; }
+  .msg.you { align-self: flex-end; background: #233463; border-bottom-right-radius: 4px; }
+  .msg.elf { align-self: flex-start; background: rgba(47,179,92,.16); border: 1px solid rgba(47,179,92,.35); border-bottom-left-radius: 4px; }
+  .msg.elf.bad { background: rgba(227,55,63,.14); border-color: rgba(227,55,63,.4); }
+  .msg small { display: block; color: var(--dim); font-size: 11px; margin-top: 2px; }
+  .thinking span { display: inline-block; width: 6px; height: 6px; margin-right: 3px; border-radius: 50%; background: #8ff0ae; animation: twinkle 1s infinite; }
+  .thinking span:nth-child(2) { animation-delay: .2s; } .thinking span:nth-child(3) { animation-delay: .4s; }
+  #aiState { font-size: 11px; font-weight: 700; letter-spacing: .3px; text-transform: none; margin-left: auto; color: var(--dim); }
+  #aiState.ok { color: #8ff0ae; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } #snow { display: none; } }
 </style>
 </head>
@@ -238,6 +254,19 @@
 <main>
   <!-- LIGHTS -->
   <section id="tab-lights" class="active">
+    <div class="card ask">
+      <h2>Ask the elves <span id="aiState">waking up…</span></h2>
+      <form id="askForm" autocomplete="off">
+        <input id="askText" type="text" placeholder="e.g. candy cane, a bit slower" enterkeyhint="send">
+        <button class="btn primary" id="askBtn">Send</button>
+      </form>
+      <div class="ideas" id="ideas">
+        <button>Something cozy</button><button>Red and green chase</button><button>Snowfall on lights 1 to 6</button>
+        <button>Brighter</button><button>Slower</button><button>Change looks every 15 minutes</button><button>Turn on at 4:30, off at 11</button>
+      </div>
+      <div class="talk" id="talk"></div>
+    </div>
+
     <div class="card">
       <div class="master">
         <div class="sun"></div>
@@ -351,7 +380,7 @@
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-let S = null, found = [], logs = [];
+let S = null, found = [], logs = [], AI = null, asking = null;
 let live = {};         // last preview colour per light, repainted after each re-render
 const selected = new Set();
 let editing = false;   // don't redraw the editor while a slider is held
@@ -384,6 +413,7 @@ function connect() {
     else if (m.type === 'preview') paintPreview(m.data);
     else if (m.type === 'found') { found = m.data; renderFound(); }
     else if (m.type === 'logs') { logs = m.data; renderLog(); }
+    else if (m.type === 'ai') { AI = m.data; renderAi(); }
     else if (m.type === 'log') { logs.push(m.data); if (logs.length > 200) logs.shift(); renderLog(); }
   };
 }
@@ -534,6 +564,17 @@ function renderFound() {
       </select>
       <button class="btn small go" data-addfound="${esc(f.ip)}" data-sku="${esc(f.sku)}">Use</button></div>`).join('');
 }
+function renderAi() {
+  if (!AI) return;
+  const st = $('#aiState');
+  st.className = AI.ready && !AI.lastError ? 'ok' : '';
+  st.textContent = AI.busy ? 'thinking…' : AI.ready ? (AI.lastError ? 'had trouble' : 'ready') : AI.lastError ? 'asleep' : 'waking up…';
+  st.title = AI.lastError || AI.model || '';
+  const talk = $('#talk');
+  talk.innerHTML = AI.history.map(h => `<div class="msg you">${esc(h.text)}</div><div class="msg elf ${h.ok ? '' : 'bad'}">${esc(h.reply)}${h.ms ? `<small>${(h.ms / 1000).toFixed(1)}s</small>` : ''}</div>`).join('')
+    + (asking ? `<div class="msg you">${esc(asking)}</div><div class="msg elf thinking"><span></span><span></span><span></span></div>` : '');
+  talk.scrollTop = talk.scrollHeight;
+}
 function renderLog() { const el = $('#log'); el.textContent = logs.slice().reverse().map(l => `${new Date(l.at).toLocaleTimeString()}  ${l.msg}`).join('\n'); }
 
 // ── Events ──
@@ -629,6 +670,16 @@ $('#order').addEventListener('click', (e) => {
   api('/api/lights/order', { order: o });
 });
 $('#order').addEventListener('change', (e) => { if (e.target.dataset.lname) api('/api/lights', { ids: [e.target.dataset.lname], name: e.target.value }); });
+
+// ── Ask the elves ──
+async function ask(text) {
+  text = text.trim(); if (!text || asking) return;
+  asking = text; $('#askText').value = ''; $('#askBtn').disabled = true; renderAi();
+  await api('/api/ask', { text });
+  asking = null; $('#askBtn').disabled = false; renderAi();
+}
+$('#askForm').onsubmit = (e) => { e.preventDefault(); ask($('#askText').value); };
+$('#ideas').onclick = (e) => { if (e.target.tagName === 'BUTTON') ask(e.target.textContent); };
 
 // ── Decorations ──
 (function garland() {

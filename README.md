@@ -37,6 +37,14 @@ Auto-start: see `deploy/christmas-lights.service`.
   OFF holds until the next on time.
 - If the server restarts while the lights were on, they come back on.
 
+## Ask the elves
+
+The box at the top of the Lights tab takes plain English: "something cozy",
+"red and green chase", "snowfall on 7 to 12", "slower", "on at 4:30, off at 11".
+It runs on local Llama 3.1 8B through Ollama, so nothing leaves the house.
+Most requests take 2-6 s on this CPU. "on", "off" and a look's exact name are
+instant. The app starts Ollama itself if it isn't running.
+
 ## Effects
 
 Solid, Breathe, Colour Fade, Wave, Chase, Candy Cane, Alternate, Twinkle,
@@ -71,6 +79,7 @@ to the Bluetooth speaker and does beat detection.
 | `POST /api/looks/apply\|save\|delete\|next` | looks |
 | `POST /api/rotate` `{enabled, minutes, list}` | auto-rotate |
 | `POST /api/schedule` `{enabled, on, off, tz}` | daily schedule |
+| `POST /api/ask` `{text}` | plain-English command (local Llama) |
 | `POST /api/music/enable` `{enabled}`, `POST /api/music` `{level, beat}` | music |
 
 Settings live in `config.json`, which git ignores.

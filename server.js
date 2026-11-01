@@ -9,6 +9,8 @@ const express = require('express');
 const { WebSocketServer } = require('ws');
 const { createGovee } = require('./lib/govee');
 const { createEngine } = require('./lib/engine');
+const { createLlama } = require('./lib/llama');
+const { createAssistant } = require('./lib/assistant');
 
 const PORT = Number(process.env.PORT) || 3100;
 const DATA = process.env.CHRISTMAS_LIGHTS_CONFIG || path.join(__dirname, 'config.json');
@@ -38,6 +40,13 @@ const govee = createGovee({
 });
 const engine = createEngine({ file: DATA, govee, log, onChange: () => broadcast({ type: 'status', data: engine.status() }) });
 
+// Ask the elves: plain-English commands through local Llama.
+const aiState = () => ({ ...llama.status(), history: assistant.history() });
+const sendAi = () => broadcast({ type: 'ai', data: aiState() });
+const llama = createLlama({ log, onChange: sendAi });
+const assistant = createAssistant({ engine, llama, log, onChange: sendAi });
+llama.warm();
+
 // Live colours to the phone, 5x/s, only while someone's watching and it's on.
 setInterval(() => { if (wss.clients.size && engine.running) broadcast({ type: 'preview', data: engine.preview() }); }, 200);
 
@@ -45,6 +54,7 @@ wss.on('connection', (ws) => {
   ws.send(JSON.stringify({ type: 'status', data: engine.status() }));
   ws.send(JSON.stringify({ type: 'found', data: [...found.values()] }));
   ws.send(JSON.stringify({ type: 'logs', data: logs }));
+  ws.send(JSON.stringify({ type: 'ai', data: aiState() }));
 });
 
 const route = (fn) => async (req, res) => {
@@ -79,6 +89,13 @@ app.post('/api/schedule', route((b) => engine.setSchedule(b)));
 // Music: enable/disable, and the feed itself ({ level, beat, bpm }).
 app.post('/api/music/enable', route(({ enabled }) => engine.setMusic({ enabled })));
 app.post('/api/music', (req, res) => { engine.music(req.body || {}); res.json({ ok: true }); });
+
+// { text } -> { reply }
+app.post('/api/ask', async (req, res) => {
+  try { res.json({ ok: true, ...(await assistant.ask((req.body || {}).text)), status: engine.status() }); }
+  catch (e) { res.status(409).json({ ok: false, error: e.message }); }
+});
+app.get('/api/ask', (req, res) => res.json({ ok: true, ai: aiState() }));
 
 server.listen(PORT, () => log(`christmas-lights on http://0.0.0.0:${PORT}`));
 

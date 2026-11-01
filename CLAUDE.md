@@ -12,6 +12,11 @@ Govee LAN, ptReal and queue rules apply.
   feed.
 - `lib/effects.js`: `fx(ctx) -> {r,g,b}`. Keep effects pure functions of
   `ctx.t`. Per-light random state goes in `ctx.mem`.
+- `lib/llama.js` + `lib/assistant.js`: "Ask the elves". Local Llama 3.1 8B
+  (Ollama, CPU, ~60 tok/s reading, ~5 tok/s writing). Llama only returns
+  `{actions:[]}` (schema-enforced, ids are enums); the app runs them and
+  writes the reply. Keep the system prompt + examples static so Ollama's
+  prefix cache holds, and keep Llama's output short: writing is the cost.
 - `public/index.html`: single-file phone UI over a WebSocket.
 
 Rules:
