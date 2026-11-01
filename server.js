@@ -11,7 +11,7 @@ const { createGovee } = require('./lib/govee');
 const { createEngine } = require('./lib/engine');
 
 const PORT = Number(process.env.PORT) || 3100;
-const DATA = process.env.CHRISTMAS_LIGHTS_CONFIG || process.env.YARD_LIGHTS_CONFIG || path.join(__dirname, 'config.json');
+const DATA = process.env.CHRISTMAS_LIGHTS_CONFIG || path.join(__dirname, 'config.json');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
