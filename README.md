@@ -1,4 +1,4 @@
-# Yard Lights
+# Christmas Lights
 
 Christmas yard light controller for Govee lights over the LAN. Runs on the
 Ubuntu server, controlled from your phone. Lights only. Music is an option you
@@ -14,7 +14,7 @@ npm start          # http://<server-ip>:3100
 Port 3100 so it can run next to haunt-ctrl (3000). Both use the Govee LAN
 port 4002, so **only run one of them at a time.**
 
-Auto-start: see `deploy/yard-lights.service`.
+Auto-start: see `deploy/christmas-lights.service`.
 
 ## Setup (once)
 

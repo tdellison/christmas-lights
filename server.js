@@ -1,4 +1,4 @@
-// yard-lights — Christmas yard light controller for Govee LAN lights.
+// christmas-lights — Christmas yard light controller for Govee LAN lights.
 // Open http://<server-ip>:3100 on your phone.
 
 'use strict';
@@ -11,7 +11,7 @@ const { createGovee } = require('./lib/govee');
 const { createEngine } = require('./lib/engine');
 
 const PORT = Number(process.env.PORT) || 3100;
-const DATA = process.env.YARD_LIGHTS_CONFIG || path.join(__dirname, 'config.json');
+const DATA = process.env.CHRISTMAS_LIGHTS_CONFIG || process.env.YARD_LIGHTS_CONFIG || path.join(__dirname, 'config.json');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -80,6 +80,6 @@ app.post('/api/schedule', route((b) => engine.setSchedule(b)));
 app.post('/api/music/enable', route(({ enabled }) => engine.setMusic({ enabled })));
 app.post('/api/music', (req, res) => { engine.music(req.body || {}); res.json({ ok: true }); });
 
-server.listen(PORT, () => log(`yard-lights on http://0.0.0.0:${PORT}`));
+server.listen(PORT, () => log(`christmas-lights on http://0.0.0.0:${PORT}`));
 
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { govee.close(); process.exit(0); });

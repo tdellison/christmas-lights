@@ -3,95 +3,185 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0d1a14">
-<title>Yard Lights</title>
+<meta name="theme-color" content="#060a18">
+<title>Christmas Lights</title>
 <style>
   :root {
-    --bg: #0d1a14; --panel: #15261d; --panel2: #1c3226; --line: #2a4535;
-    --text: #eef4ef; --dim: #93a99b; --red: #e23b3b; --green: #2fbf62; --gold: #f2c14e;
-    --radius: 14px;
+    --sky: #060a18; --sky2: #0c1733; --panel: rgba(17, 26, 52, .82); --panel2: #18254a; --line: #26365f;
+    --text: #f6f0e1; --dim: #9ea6c2; --red: #e3373f; --green: #2fb35c; --gold: #f6c55b; --warm: #ffd89a;
+    --wire: #183b25; --radius: 16px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  body { padding-bottom: 80px; }
-  header { position: sticky; top: 0; z-index: 5; background: linear-gradient(var(--bg) 85%, transparent); padding: 12px 16px 10px; }
-  .top { display: flex; align-items: center; gap: 12px; }
-  h1 { font-size: 20px; margin: 0; flex: 1; letter-spacing: .3px; }
-  h1 span { color: var(--gold); }
-  .power { border: 0; border-radius: 999px; padding: 10px 22px; font-weight: 700; font-size: 16px; color: #fff; background: #3a4a41; }
-  .power.on { background: var(--green); box-shadow: 0 0 18px rgba(47,191,98,.45); }
-  .strip { display: flex; gap: 6px; margin-top: 12px; }
-  .strip i { flex: 1; height: 14px; border-radius: 7px; background: #000; transition: background .18s linear; border: 1px solid var(--line); }
-  .sub { color: var(--dim); font-size: 13px; margin-top: 6px; display: flex; justify-content: space-between; gap: 8px; }
+  html { background: var(--sky); }
+  html, body { margin: 0; color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body {
+    min-height: 100vh; padding-bottom: calc(84px + env(safe-area-inset-bottom));
+    background:
+      radial-gradient(1px 1px at 12% 8%, #fff8, transparent), radial-gradient(1px 1px at 33% 22%, #fff6, transparent),
+      radial-gradient(1.5px 1.5px at 58% 6%, #fffa, transparent), radial-gradient(1px 1px at 76% 18%, #fff7, transparent),
+      radial-gradient(1px 1px at 90% 4%, #fff9, transparent), radial-gradient(1px 1px at 22% 40%, #fff4, transparent),
+      radial-gradient(1px 1px at 67% 36%, #fff5, transparent), radial-gradient(1.5px 1.5px at 46% 52%, #fff4, transparent),
+      radial-gradient(1px 1px at 8% 70%, #fff3, transparent), radial-gradient(1px 1px at 84% 62%, #fff4, transparent),
+      linear-gradient(180deg, var(--sky) 0%, var(--sky2) 55%, #0a1226 100%);
+    background-attachment: fixed;
+  }
+
+  /* ── Header ── */
+  header { position: sticky; top: 0; z-index: 5; padding: calc(10px + env(safe-area-inset-top)) 16px 12px;
+    background: linear-gradient(var(--sky) 70%, rgba(6,10,24,0)); }
+  .top { display: flex; align-items: center; gap: 12px; max-width: 720px; margin: 0 auto; }
+  .brand { flex: 1; min-width: 0; }
+  h1 { font: 700 23px/1.1 Georgia, "Times New Roman", serif; margin: 0; letter-spacing: .4px; }
+  h1 span { color: var(--gold); text-shadow: 0 0 14px rgba(246,197,91,.55); }
+  .sub { color: var(--dim); font-size: 13px; margin-top: 3px; display: flex; gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; }
+  #nowLook { color: var(--warm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+  #conn::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; background: var(--dim); vertical-align: 1px; }
+  #conn.live::before { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .power { flex: none; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px;
+    padding: 11px 20px 11px 14px; font-weight: 800; font-size: 16px; letter-spacing: .5px; color: var(--dim); background: var(--panel2); }
+  .power::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: #3b4462; }
+  .power.on { color: #fff; background: linear-gradient(180deg, #d8323a, #a81f27); border-color: #ff6a6f;
+    box-shadow: 0 0 22px rgba(227,55,63,.5), inset 0 1px 0 rgba(255,255,255,.25); }
+  .power.on::before { background: #9dffb9; box-shadow: 0 0 10px #5dff8f; }
+
+  /* ── Yard stage: the live preview ── */
+  .stage { position: relative; max-width: 720px; margin: 4px auto 0; padding: 0 12px 12px; border-radius: 0 0 22px 22px; overflow: hidden; }
+  .stage::after { content: ""; position: absolute; left: -10%; right: -10%; bottom: -30px; height: 60px; border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 0%, rgba(220,232,255,.13), rgba(220,232,255,0) 70%); pointer-events: none; }
+  .string { display: grid; grid-template-columns: repeat(auto-fit, minmax(62px, 1fr)); row-gap: 6px; }
+  .bulb { position: relative; height: 112px; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; }
+  .bulb::before { /* sagging wire between bulbs */
+    content: ""; position: absolute; top: 0; left: -1px; right: -1px; height: 18px;
+    border-bottom: 2px solid var(--wire); border-radius: 0 0 50% 50% / 0 0 100% 100%; }
+  .bulb .cap { position: absolute; top: 15px; left: 50%; width: 12px; height: 10px; margin-left: -6px; border-radius: 3px 3px 2px 2px;
+    background: linear-gradient(90deg, #12301d, #2c5a3a, #12301d); }
+  .bulb .glass { position: absolute; top: 24px; left: 50%; width: 28px; height: 40px; margin-left: -14px;
+    border-radius: 50% 50% 50% 50% / 38% 38% 62% 62%;
+    background: radial-gradient(circle at 36% 28%, rgba(255,255,255,.7), rgba(255,255,255,0) 32%), var(--c, #000);
+    box-shadow: 0 0 10px 2px var(--c, transparent), 0 0 34px 10px color-mix(in srgb, var(--c, #000) 55%, transparent),
+      inset 0 -6px 10px rgba(0,0,0,.25);
+    transition: background-color .2s linear, box-shadow .2s linear; }
+  .bulb .glow { position: absolute; top: 4px; left: 50%; width: 96px; height: 96px; margin-left: -48px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, color-mix(in srgb, var(--c, #000) 45%, transparent), transparent 65%); transition: background .2s linear; }
+  .bulb .tag { position: absolute; left: 2px; right: 2px; top: 76px; font-size: 11px; line-height: 1.25; color: var(--dim);
+    text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bulb .tag b { display: block; font-size: 10px; color: #5f6a8c; font-weight: 600; }
+  .bulb.off .glass { opacity: .55; }
+  .bulb.sel .tag { color: var(--gold); font-weight: 700; }
+  .bulb.sel .cap { background: linear-gradient(90deg, #8a6a1e, var(--gold), #8a6a1e); }
+  #editor { scroll-margin-top: 84px; }
+  .stage .empty { padding: 28px 0 18px; }
+
+  /* ── Layout ── */
   main { padding: 0 16px; max-width: 720px; margin: 0 auto; }
-  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: var(--panel); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 6; }
-  nav button { flex: 1; background: none; border: 0; color: var(--dim); padding: 14px 0; font-size: 15px; font-weight: 600; }
-  nav button.active { color: var(--gold); }
   section { display: none; } section.active { display: block; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin: 12px 0; }
-  .card h2 { font-size: 15px; margin: 0 0 10px; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; z-index: 6; padding-bottom: env(safe-area-inset-bottom);
+    background: rgba(8,13,30,.94); border-top: 1px solid var(--line); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  nav button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: 0; color: var(--dim);
+    padding: 10px 0 12px; font-size: 13px; font-weight: 700; letter-spacing: .3px; }
+  nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  nav button.active { color: var(--gold); }
+  nav button.active svg { filter: drop-shadow(0 0 6px rgba(246,197,91,.7)); }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin: 14px 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .card h2 { font-size: 13px; margin: 0 0 12px; color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; }
   .row { display: flex; align-items: center; gap: 10px; }
-  .row + .row { margin-top: 10px; }
+  .row + .row { margin-top: 14px; }
   .grow { flex: 1; min-width: 0; }
-  label.lbl { font-size: 13px; color: var(--dim); display: block; margin-bottom: 4px; }
-  input[type=range] { width: 100%; accent-color: var(--gold); }
-  input[type=text], input[type=time], input[type=number], select { width: 100%; background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: 16px; }
-  button.btn { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 15px; font-weight: 600; }
-  button.btn.primary { background: var(--red); border-color: var(--red); }
-  button.btn.small { padding: 6px 10px; font-size: 13px; }
-  button.btn:disabled { opacity: .45; }
-  .light { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+  label.lbl { font-size: 13px; color: var(--dim); display: flex; justify-content: space-between; margin-bottom: 6px; }
+  label.lbl b { color: var(--warm); }
+  input[type=range] { width: 100%; accent-color: var(--gold); height: 28px; }
+  input[type=text], input[type=time], input[type=number], select { width: 100%; background: var(--panel2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 12px; padding: 11px; font-size: 16px; }
+  input:focus, select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  ::placeholder { color: #6c7596; }
+  button.btn { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 11px 15px; font-size: 15px; font-weight: 600; }
+  button.btn:active { transform: translateY(1px); }
+  button.btn.primary { background: linear-gradient(180deg, #d8323a, #b0222a); border-color: #e8555b; color: #fff; }
+  button.btn.go { background: linear-gradient(180deg, #2aa553, #1d8240); border-color: #3cc66a; color: #fff; }
+  button.btn.small { padding: 7px 11px; font-size: 13px; border-radius: 10px; }
+  button.btn:disabled { opacity: .4; }
+
+  .master { display: flex; align-items: center; gap: 14px; }
+  .master .sun { width: 34px; height: 34px; flex: none; border-radius: 50%;
+    background: radial-gradient(circle, #fff3d6, var(--gold) 45%, rgba(246,197,91,0) 72%); }
+
+  .light { display: flex; align-items: center; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--line); }
   .light:last-child { border-bottom: 0; }
-  .light.sel { background: rgba(242,193,78,.08); border-radius: 10px; }
-  .dot { width: 30px; height: 30px; border-radius: 50%; background: #000; border: 2px solid var(--line); flex: none; transition: background .18s linear; }
+  .light.sel { background: rgba(246,197,91,.09); border-radius: 12px; border-bottom-color: transparent; }
+  .dot { width: 30px; height: 30px; border-radius: 50%; flex: none; border: 1px solid rgba(255,255,255,.12);
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), rgba(255,255,255,0) 40%), var(--c, #000);
+    box-shadow: 0 0 12px 1px color-mix(in srgb, var(--c, #000) 70%, transparent); transition: background-color .2s linear, box-shadow .2s linear; }
   .light .name { font-weight: 600; }
   .light .meta { color: var(--dim); font-size: 13px; }
   .check { width: 24px; height: 24px; accent-color: var(--gold); flex: none; }
-  .switch { position: relative; width: 50px; height: 30px; flex: none; }
+  .switch { position: relative; width: 52px; height: 30px; flex: none; }
   .switch input { opacity: 0; width: 0; height: 0; }
-  .switch span { position: absolute; inset: 0; background: #3a4a41; border-radius: 30px; transition: .2s; }
-  .switch span::before { content: ""; position: absolute; width: 24px; height: 24px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
-  .switch input:checked + span { background: var(--green); }
-  .switch input:checked + span::before { transform: translateX(20px); }
+  .switch span { position: absolute; inset: 0; background: #2a3354; border-radius: 30px; transition: .2s; }
+  .switch span::before { content: ""; position: absolute; width: 24px; height: 24px; left: 3px; top: 3px; background: #dfe3f0; border-radius: 50%; transition: .2s; }
+  .switch input:checked + span { background: var(--green); box-shadow: 0 0 12px rgba(47,179,92,.5); }
+  .switch input:checked + span::before { transform: translateX(22px); background: #fff; }
+  .switch input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { display: flex; gap: 3px; padding: 6px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); align-items: center; font-size: 13px; color: var(--text); }
-  .chip.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
-  .chip b { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .chip { display: flex; gap: 4px; padding: 7px 11px 7px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2);
+    align-items: center; font-size: 13px; color: var(--text); }
+  .chip.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset, 0 0 12px rgba(246,197,91,.25); }
+  .chip b { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: 0 0 5px currentColor; }
   .swatches { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .swatches input[type=color] { width: 44px; height: 44px; border: 0; padding: 0; background: none; border-radius: 10px; }
+  .swatches input[type=color] { width: 46px; height: 46px; border: 1px solid var(--line); padding: 3px; background: var(--panel2); border-radius: 50%; }
+  .swatches input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+  .swatches input[type=color]::-webkit-color-swatch { border: 0; border-radius: 50%; }
+  .swatches input[type=color]::-moz-color-swatch { border: 0; border-radius: 50%; }
+  .actions { flex-wrap: wrap; }
+  .actions .btn { flex: 1; }
+
   .looks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .look { text-align: left; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; color: var(--text); font-size: 15px; font-weight: 600; }
-  .look.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
-  .look small { display: block; color: var(--dim); font-weight: 400; margin-top: 4px; font-size: 12px; }
-  .look .bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px; }
-  .look .bar i { flex: 1; }
-  .pl { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .look { text-align: left; background: linear-gradient(180deg, #1b2a52, #141f3e); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px; color: var(--text); font-size: 15px; font-weight: 700; }
+  .look.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset, 0 0 18px rgba(246,197,91,.25); }
+  .look small { display: block; color: var(--dim); font-weight: 400; margin-top: 3px; font-size: 12px; }
+  .look .bar { display: flex; gap: 6px; margin-top: 10px; padding-top: 6px; border-top: 2px solid var(--wire); }
+  .look .bar i { width: 11px; height: 14px; border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%; margin-top: -1px; box-shadow: 0 0 8px currentColor; }
+
+  .pl { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
   .pl:last-child { border-bottom: 0; }
-  .dev { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .dev { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .dev:first-child { padding-top: 0; }
   .dev:last-child { border-bottom: 0; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .note { color: var(--dim); font-size: 13px; margin: 8px 0 0; }
+  code { color: var(--warm); font-size: 12px; }
   .log { font: 12px/1.5 ui-monospace, Menlo, monospace; color: var(--dim); max-height: 220px; overflow: auto; white-space: pre-wrap; }
-  .toast { position: fixed; left: 16px; right: 16px; bottom: 86px; background: var(--red); color: #fff; padding: 12px 14px; border-radius: 12px; font-weight: 600; display: none; z-index: 9; }
+  .toast { position: fixed; left: 16px; right: 16px; bottom: calc(92px + env(safe-area-inset-bottom)); max-width: 688px; margin: 0 auto;
+    background: var(--red); color: #fff; padding: 12px 14px; border-radius: 12px; font-weight: 600; display: none; z-index: 9;
+    box-shadow: 0 0 24px rgba(227,55,63,.45); }
   .empty { color: var(--dim); text-align: center; padding: 18px 0; }
-  .order button { padding: 4px 8px; }
+  .order button { padding: 4px 9px; }
+  .order .dot { width: 20px; height: 20px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <header>
   <div class="top">
-    <h1>Yard <span>Lights</span></h1>
+    <div class="brand">
+      <h1>Christmas <span>Lights</span></h1>
+      <div class="sub"><span id="nowLook">—</span><span>·</span><span id="conn">connecting…</span></div>
+    </div>
     <button id="power" class="power">OFF</button>
   </div>
-  <div class="strip" id="strip"></div>
-  <div class="sub"><span id="nowLook">—</span><span id="conn">connecting…</span></div>
 </header>
+
+<div class="stage"><div class="string" id="strip"></div></div>
 
 <main>
   <!-- LIGHTS -->
   <section id="tab-lights" class="active">
     <div class="card">
-      <div class="row">
+      <div class="master">
+        <div class="sun"></div>
         <div class="grow"><label class="lbl">Master brightness <b id="masterVal"></b></label><input id="master" type="range" min="1" max="100"></div>
       </div>
     </div>
@@ -111,8 +201,8 @@
       <div class="row"><div class="grow"><label class="lbl">Colours (first = main colour)</label><div class="swatches" id="edColors"></div></div></div>
       <div class="row"><div class="grow"><label class="lbl">Brightness <b id="edBriVal"></b></label><input id="edBri" type="range" min="0" max="100"></div></div>
       <div class="row"><div class="grow"><label class="lbl">Speed <b id="edSpeedVal"></b></label><input id="edSpeed" type="range" min="0" max="100"></div></div>
-      <div class="row">
-        <button class="btn" id="edOn">Turn on</button>
+      <div class="row actions">
+        <button class="btn go" id="edOn">Turn on</button>
         <button class="btn" id="edOff">Turn off</button>
         <button class="btn" id="edIdent">Find it</button>
       </div>
@@ -200,9 +290,9 @@
 </main>
 
 <nav>
-  <button data-tab="lights" class="active">Lights</button>
-  <button data-tab="looks">Looks</button>
-  <button data-tab="setup">Setup</button>
+  <button data-tab="lights" class="active"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Lights</button>
+  <button data-tab="looks"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg>Looks</button>
+  <button data-tab="setup"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Setup</button>
 </nav>
 <div class="toast" id="toast"></div>
 
@@ -210,6 +300,7 @@
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let S = null, found = [], logs = [];
+let live = {};         // last preview colour per light, repainted after each re-render
 const selected = new Set();
 let editing = false;   // don't redraw the editor while a slider is held
 
@@ -233,8 +324,8 @@ function throttle(fn, ms = 120) { let t = 0, pend = null, timer; return (...a) =
 // ── WebSocket ──
 function connect() {
   const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
-  ws.onopen = () => { $('#conn').textContent = 'connected'; };
-  ws.onclose = () => { $('#conn').textContent = 'reconnecting…'; setTimeout(connect, 1500); };
+  ws.onopen = () => { $('#conn').textContent = 'connected'; $('#conn').classList.add('live'); };
+  ws.onclose = () => { $('#conn').textContent = 'reconnecting…'; $('#conn').classList.remove('live'); setTimeout(connect, 1500); };
   ws.onmessage = (ev) => {
     const m = JSON.parse(ev.data);
     if (m.type === 'status') { S = m.data; render(); }
@@ -248,17 +339,22 @@ function connect() {
 function paintPreview(colors) {
   for (const [id, c] of Object.entries(colors)) {
     const css = `rgb(${c.r},${c.g},${c.b})`;
-    document.querySelectorAll(`[data-live="${CSS.escape(id)}"]`).forEach(el => el.style.background = css);
+    live[id] = c;
+    document.querySelectorAll(`[data-live="${CSS.escape(id)}"]`).forEach(el => el.style.setProperty('--c', css));
   }
 }
-function blackout() { document.querySelectorAll('[data-live]').forEach(el => el.style.background = '#000'); }
+function blackout() { live = {}; document.querySelectorAll('[data-live]').forEach(el => el.style.setProperty('--c', '#000')); }
 
 // ── Render ──
 function render() {
   if (!S) return;
   const p = $('#power'); p.textContent = S.running ? 'ON' : 'OFF'; p.classList.toggle('on', S.running);
   if (!S.running) setTimeout(blackout, 50);
-  $('#strip').innerHTML = S.lights.map(l => `<i data-live="${esc(l.id)}" title="${esc(l.name)}"></i>`).join('') || '<i></i>';
+  $('#strip').innerHTML = S.lights.map((l, i) => `
+    <button class="bulb ${l.on ? '' : 'off'} ${selected.has(l.id) ? 'sel' : ''}" data-bulb="${esc(l.id)}" data-live="${esc(l.id)}" title="${esc(l.name)}">
+      <span class="glow"></span><span class="cap"></span><span class="glass"></span>
+      <span class="tag"><b>${i + 1}</b>${esc(l.name)}</span>
+    </button>`).join('') || '<div class="empty">No lights on the string yet.</div>';
   const cur = S.looks.find(l => l.id === S.current);
   $('#nowLook').textContent = cur ? cur.name : (S.lights.length ? 'Custom' : 'No lights yet — go to Setup');
   if (document.activeElement !== $('#master')) { $('#master').value = S.master; }
@@ -266,6 +362,7 @@ function render() {
   // keep selection valid
   for (const id of [...selected]) if (!S.lights.some(l => l.id === id)) selected.delete(id);
   renderLights(); renderEditor(); renderLooks(); renderDevices(); renderFound();
+  if (S.running) paintPreview(live);
 }
 
 function effName(id) { return (S.effects.find(e => e.id === id) || {}).name || id; }
@@ -299,7 +396,7 @@ function renderEditor() {
   sel.innerHTML = S.effects.map(e => `<option value="${e.id}" ${e.id === L.effect ? 'selected' : ''}>${esc(e.name)}</option>`).join('');
   $('#edDesc').textContent = (S.effects.find(e => e.id === L.effect) || {}).desc || '';
   const palKey = (arr) => arr.join(',').toLowerCase();
-  $('#edPalettes').innerHTML = S.palettes.map(p => `<button class="chip ${palKey(p.colors) === palKey(L.palette) ? 'on' : ''}" data-pal="${p.id}">${p.colors.map(c => `<b style="background:${c}"></b>`).join('')} ${esc(p.name)}</button>`).join('');
+  $('#edPalettes').innerHTML = S.palettes.map(p => `<button class="chip ${palKey(p.colors) === palKey(L.palette) ? 'on' : ''}" data-pal="${p.id}">${p.colors.map(c => `<b style="background:${c};color:${c}"></b>`).join('')} ${esc(p.name)}</button>`).join('');
   $('#edColors').innerHTML = L.palette.map((c, i) => `<input type="color" value="${c}" data-ci="${i}">`).join('')
     + (L.palette.length < 6 ? '<button class="btn small" id="addColor">+</button>' : '')
     + (L.palette.length > 1 ? '<button class="btn small" id="rmColor">−</button>' : '');
@@ -315,7 +412,7 @@ function renderLooks() {
   $('#looks').innerHTML = S.looks.map(l => `
     <button class="look ${l.id === S.current ? 'on' : ''}" data-look="${esc(l.id)}">${esc(l.name)}
       <small>${l.builtin ? esc(effName(l.effect)) : 'Saved look'}</small>
-      <div class="bar">${(palOf(l).length ? palOf(l) : ['#555']).map(c => `<i style="background:${c}"></i>`).join('')}</div>
+      <div class="bar">${(palOf(l).length ? palOf(l) : ['#555']).map(c => `<i style="background:${c};color:${c}"></i>`).join('')}</div>
     </button>`).join('');
   if (document.activeElement !== $('#rotMin')) $('#rotMin').value = S.rotate.minutes;
   $('#rotOn').checked = S.rotate.enabled;
@@ -354,7 +451,7 @@ function renderDevices() {
       <p class="note">${esc(d.sku || 'Govee')} · ${ago(d.lastSeen)}</p>
     </div>`).join('');
   $('#order').innerHTML = S.lights.length ? S.lights.map((l, i) => `
-    <div class="pl order"><div class="dot" data-live="${esc(l.id)}" style="width:20px;height:20px"></div>
+    <div class="pl order"><div class="dot" data-live="${esc(l.id)}"></div>
       <div class="grow">${i + 1}. <input type="text" value="${esc(l.name)}" data-lname="${esc(l.id)}" style="display:inline-block;width:70%;padding:6px"></div>
       <button class="btn small" data-up="${i}" ${i ? '' : 'disabled'}>↑</button>
       <button class="btn small" data-down="${i}" ${i < S.lights.length - 1 ? '' : 'disabled'}>↓</button>
@@ -387,10 +484,19 @@ $('#lights').addEventListener('click', (e) => {
   if (sel) {
     if (t.dataset.sel) { t.checked ? selected.add(sel) : selected.delete(sel); }
     else { if (selected.has(sel) && selected.size === 1) selected.clear(); else { selected.clear(); selected.add(sel); } }
-    renderLights(); renderEditor();
+    renderLights(); renderEditor(); markBulbs();
   }
 });
-$('#selAll').onclick = () => { if (selected.size === S.lights.length) selected.clear(); else S.lights.forEach(l => selected.add(l.id)); renderLights(); renderEditor(); };
+function markBulbs() { document.querySelectorAll('[data-bulb]').forEach(b => b.classList.toggle('sel', selected.has(b.dataset.bulb))); }
+$('#strip').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-bulb]'); if (!b) return;
+  const id = b.dataset.bulb;
+  if (selected.has(id) && selected.size === 1) selected.clear(); else { selected.clear(); selected.add(id); }
+  renderLights(); renderEditor(); markBulbs();
+  document.querySelectorAll('nav button')[0].click();
+  if (selected.size) $('#editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+$('#selAll').onclick = () => { if (selected.size === S.lights.length) selected.clear(); else S.lights.forEach(l => selected.add(l.id)); renderLights(); renderEditor(); markBulbs(); };
 
 const patchSel = (patch) => targets().length && api('/api/lights', { ids: targets(), ...patch });
 $('#edEffect').onchange = (e) => patchSel({ effect: e.target.value, on: true });

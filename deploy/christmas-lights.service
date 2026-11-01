@@ -1,9 +1,9 @@
 # Auto-start on the Ubuntu server:
-#   sudo cp deploy/yard-lights.service /etc/systemd/system/
+#   sudo cp deploy/christmas-lights.service /etc/systemd/system/
 #   (edit User= and WorkingDirectory= to match)
-#   sudo systemctl daemon-reload && sudo systemctl enable --now yard-lights
+#   sudo systemctl daemon-reload && sudo systemctl enable --now christmas-lights
 [Unit]
-Description=Yard Lights (Govee Christmas light controller)
+Description=Christmas Lights (Govee Christmas light controller)
 After=network-online.target
 Wants=network-online.target
 

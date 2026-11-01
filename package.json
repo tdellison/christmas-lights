@@ -1,5 +1,5 @@
 {
-  "name": "yard-lights",
+  "name": "christmas-lights",
   "version": "0.1.0",
   "description": "Christmas yard light controller for Govee LAN lights — per-light control, effects, looks, schedule, music-ready",
   "main": "server.js",
