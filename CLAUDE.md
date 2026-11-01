@@ -18,4 +18,6 @@ Rules:
 - Never send faster than the tick. Never queue a backlog of effect frames.
 - Port 3100. Govee listen port 4002 clashes with any other Govee LAN
   app, so never run two at once.
+- Fresh installs start with 6 two-light pair slots (12 lights) and no IPs;
+  a slot with no IP is previewed but never sent to.
 - Owner prefers short answers and no prices.

@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#060a18">
 <title>Christmas Lights</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&display=swap" rel="stylesheet">
 <style>
   :root {
     --sky: #060a18; --sky2: #0c1733; --panel: rgba(17, 26, 52, .82); --panel2: #18254a; --line: #26365f;
@@ -27,11 +30,20 @@
   }
 
   /* ── Header ── */
-  header { position: sticky; top: 0; z-index: 5; padding: calc(10px + env(safe-area-inset-top)) 16px 12px;
+  header { position: sticky; top: 0; z-index: 5; padding: calc(20px + env(safe-area-inset-top)) 16px 12px;
     background: linear-gradient(var(--sky) 70%, rgba(6,10,24,0)); }
+  /* Garland of little bulbs across the top */
+  .garland { position: absolute; top: env(safe-area-inset-top); left: 0; right: 0; height: 16px; display: flex; justify-content: space-around;
+    pointer-events: none; overflow: hidden; }
+  .garland::before { content: ""; position: absolute; left: -2%; right: -2%; top: -10px; height: 16px;
+    border-bottom: 3px solid #1d4a2c; border-radius: 0 0 50% 50% / 0 0 100% 100%; }
+  .garland i { position: relative; top: 3px; width: 7px; height: 10px; border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+    background: var(--b); box-shadow: 0 0 8px 1px var(--b); animation: twinkle 2.4s ease-in-out infinite; animation-delay: var(--d); }
+  @keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
   .top { display: flex; align-items: center; gap: 12px; max-width: 720px; margin: 0 auto; }
   .brand { flex: 1; min-width: 0; }
-  h1 { font: 700 23px/1.1 Georgia, "Times New Roman", serif; margin: 0; letter-spacing: .4px; }
+  h1 { font: 700 30px/1 "Mountains of Christmas", Georgia, "Times New Roman", serif; margin: 0; letter-spacing: .5px;
+    text-shadow: 0 2px 0 rgba(0,0,0,.35); }
   h1 span { color: var(--gold); text-shadow: 0 0 14px rgba(246,197,91,.55); }
   .sub { color: var(--dim); font-size: 13px; margin-top: 3px; display: flex; gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; }
   #nowLook { color: var(--warm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
@@ -40,6 +52,7 @@
   .power { flex: none; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px;
     padding: 11px 20px 11px 14px; font-weight: 800; font-size: 16px; letter-spacing: .5px; color: var(--dim); background: var(--panel2); }
   .power::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: #3b4462; }
+  .power:not(.on) { background: repeating-linear-gradient(-45deg, #1b2648 0 8px, #222f58 8px 16px); }
   .power.on { color: #fff; background: linear-gradient(180deg, #d8323a, #a81f27); border-color: #ff6a6f;
     box-shadow: 0 0 22px rgba(227,55,63,.5), inset 0 1px 0 rgba(255,255,255,.25); }
   .power.on::before { background: #9dffb9; box-shadow: 0 0 10px #5dff8f; }
@@ -48,7 +61,11 @@
   .stage { position: relative; max-width: 720px; margin: 4px auto 0; padding: 0 12px 12px; border-radius: 0 0 22px 22px; overflow: hidden; }
   .stage::after { content: ""; position: absolute; left: -10%; right: -10%; bottom: -30px; height: 60px; border-radius: 50%;
     background: radial-gradient(ellipse at 50% 0%, rgba(220,232,255,.13), rgba(220,232,255,0) 70%); pointer-events: none; }
-  .string { display: grid; grid-template-columns: repeat(auto-fit, minmax(62px, 1fr)); row-gap: 6px; }
+  .stage { padding-bottom: 46px; }
+  .stage .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; pointer-events: none; z-index: 0; }
+  .stage .ground svg { width: 100%; height: 100%; display: block; }
+  .string { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(var(--cols, 6), 1fr); row-gap: 6px; }
+  @media (min-width: 640px) { .string { --cols: var(--wide, 12); } }
   .bulb { position: relative; height: 112px; background: none; border: 0; padding: 0; color: inherit; font: inherit; cursor: pointer; }
   .bulb::before { /* sagging wire between bulbs */
     content: ""; position: absolute; top: 0; left: -1px; right: -1px; height: 18px;
@@ -66,6 +83,7 @@
   .bulb .tag { position: absolute; left: 2px; right: 2px; top: 76px; font-size: 11px; line-height: 1.25; color: var(--dim);
     text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .bulb .tag b { display: block; font-size: 10px; color: #5f6a8c; font-weight: 600; }
+  .bulb.noip .tag b::after { content: " ○"; color: #6c7596; }
   .bulb.off .glass { opacity: .55; }
   .bulb.sel .tag { color: var(--gold); font-weight: 700; }
   .bulb.sel .cap { background: linear-gradient(90deg, #8a6a1e, var(--gold), #8a6a1e); }
@@ -85,7 +103,14 @@
 
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin: 14px 0;
     box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-  .card h2 { font-size: 13px; margin: 0 0 12px; color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; }
+  .card { position: relative; overflow: hidden; }
+  .card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px;
+    background: repeating-linear-gradient(-45deg, var(--red) 0 10px, #fff3e8 10px 20px); opacity: .85; }
+  .card h2 { font-size: 13px; margin: 0 0 12px; color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px;
+    display: flex; align-items: center; gap: 8px; }
+  .card h2::before { content: ""; width: 20px; height: 14px; flex: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 28'%3E%3Cpath d='M20 16C14 6 6 4 1 6c3 2 3 5 1 7 4 0 6 2 6 5 3-2 7-2 12-2z' fill='%232fb35c'/%3E%3Cpath d='M20 16c6-10 14-12 19-10-3 2-3 5-1 7-4 0-6 2-6 5-3-2-7-2-12-2z' fill='%23228a45'/%3E%3Ccircle cx='17' cy='18' r='3.4' fill='%23e3373f'/%3E%3Ccircle cx='23' cy='18' r='3.4' fill='%23e3373f'/%3E%3Ccircle cx='20' cy='22.5' r='3.4' fill='%23c8242c'/%3E%3C/svg%3E") center / contain no-repeat; }
+  .card h2.plain::before { display: none; }
   .row { display: flex; align-items: center; gap: 10px; }
   .row + .row { margin-top: 14px; }
   .grow { flex: 1; min-width: 0; }
@@ -141,7 +166,8 @@
   .look { text-align: left; background: linear-gradient(180deg, #1b2a52, #141f3e); border: 1px solid var(--line); border-radius: 14px;
     padding: 12px; color: var(--text); font-size: 15px; font-weight: 700; }
   .look.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset, 0 0 18px rgba(246,197,91,.25); }
-  .look small { display: block; color: var(--dim); font-weight: 400; margin-top: 3px; font-size: 12px; }
+  .look { font-family: "Mountains of Christmas", Georgia, serif; font-size: 19px; line-height: 1.1; }
+  .look small { display: block; color: var(--dim); font-weight: 400; margin-top: 3px; font-size: 12px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
   .look .bar { display: flex; gap: 6px; margin-top: 10px; padding-top: 6px; border-top: 2px solid var(--wire); }
   .look .bar i { width: 11px; height: 14px; border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%; margin-top: -1px; box-shadow: 0 0 8px currentColor; }
 
@@ -160,11 +186,31 @@
   .empty { color: var(--dim); text-align: center; padding: 18px 0; }
   .order button { padding: 4px 9px; }
   .order .dot { width: 20px; height: 20px; }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  .slot { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .slot:last-child { border-bottom: 0; }
+  .slot .pairdots { display: flex; gap: 4px; grid-row: span 2; }
+  .slot .pairdots .dot { width: 22px; height: 22px; }
+  .slot .head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .slot .head input[data-dname] { flex: 1; min-width: 0; padding: 7px 9px; font-weight: 700; font-size: 15px; }
+  .slot .ipline { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .slot .ipline input[data-dip] { flex: 1 1 140px; min-width: 0; padding: 8px 10px; }
+  .slot .ipline select { width: auto; padding: 8px; }
+  .slot .state { grid-column: 2; font-size: 12px; color: var(--dim); }
+  .slot .state.ok { color: #7fe39f; }
+  .slot .state.empty { color: #8f97b6; }
+  .badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #2a3354; color: var(--dim); white-space: nowrap; }
+  .badge.ok { background: rgba(47,179,92,.18); color: #8ff0ae; }
+  #snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  header, .stage, main, nav, .toast { position: relative; }
+  header { position: sticky; } nav, .toast { position: fixed; }
+  main { z-index: 1; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } #snow { display: none; } }
 </style>
 </head>
 <body>
+<canvas id="snow" aria-hidden="true"></canvas>
 <header>
+  <div class="garland" id="garland" aria-hidden="true"></div>
   <div class="top">
     <div class="brand">
       <h1>Christmas <span>Lights</span></h1>
@@ -174,7 +220,20 @@
   </div>
 </header>
 
-<div class="stage"><div class="string" id="strip"></div></div>
+<div class="stage">
+  <div class="string" id="strip"></div>
+  <div class="ground" aria-hidden="true">
+    <svg viewBox="0 0 400 64" preserveAspectRatio="none">
+      <g fill="#0f2a1c">
+        <path d="M18 50 L30 14 L42 50 Z"/><path d="M14 56 L30 26 L46 56 Z"/>
+        <path d="M352 52 L366 8 L380 52 Z"/><path d="M347 58 L366 22 L385 58 Z"/>
+        <path d="M384 56 L392 30 L400 56 Z"/>
+      </g>
+      <path d="M0 50 C60 38 110 54 170 46 S290 36 340 48 S390 52 400 46 V64 H0 Z" fill="#dfe8ff" opacity=".16"/>
+      <path d="M0 56 C70 48 140 60 210 54 S330 48 400 56 V64 H0 Z" fill="#eef3ff" opacity=".22"/>
+    </svg>
+  </div>
+</div>
 
 <main>
   <!-- LIGHTS -->
@@ -248,23 +307,16 @@
   <!-- SETUP -->
   <section id="tab-setup">
     <div class="card">
-      <h2>Find lights</h2>
-      <div class="row"><button class="btn primary" id="scan">Scan network</button><span class="note" id="scanNote" style="margin:0">Lights need LAN Control on in the Govee app.</span></div>
-      <div id="found" style="margin-top:10px"></div>
-      <h2 style="margin-top:16px">Add by IP</h2>
-      <div class="grid2">
-        <input id="addIp" type="text" inputmode="decimal" placeholder="192.168.1.50">
-        <input id="addName" type="text" placeholder="Name (Porch)">
-      </div>
-      <div class="row">
-        <div class="grow"><label class="lbl">Lights on this controller</label><select id="addSegs"><option value="1">1</option><option value="2">2 (Spotlight 2-pack)</option><option value="3">3</option><option value="4">4</option></select></div>
-        <button class="btn primary" id="addBtn" style="align-self:flex-end">Add</button>
-      </div>
+      <h2>Light pairs</h2>
+      <p class="note" style="margin-top:0">Each pair is one Govee controller: one IP, two lights you control separately. Type the IP, or scan and pick a slot. Empty slots still show in the preview.</p>
+      <div id="devices"></div>
+      <div class="row" style="margin-top:10px"><button class="btn" id="addPair">+ Add a pair</button></div>
     </div>
 
     <div class="card">
-      <h2>Controllers</h2>
-      <div id="devices"></div>
+      <h2>Find lights on the network</h2>
+      <div class="row"><button class="btn primary" id="scan">Scan network</button><span class="note" id="scanNote" style="margin:0">Turn on LAN Control for each light in the Govee app first.</span></div>
+      <div id="found" style="margin-top:10px"></div>
     </div>
 
     <div class="card">
@@ -274,12 +326,12 @@
     </div>
 
     <div class="card">
-      <h2>Music</h2>
+      <h2>Music <span class="badge">optional</span></h2>
       <div class="row">
-        <div class="grow">Let music drive beat effects</div>
+        <div class="grow">Sync lights to music</div>
         <label class="switch"><input id="musicOn" type="checkbox"><span></span></label>
       </div>
-      <p class="note" id="musicNote">Off. When on, anything that POSTs <code>{level, beat}</code> to <code>/api/music</code> drives Chase, Alternate, Sparkle and Music Pulse.</p>
+      <p class="note" id="musicNote"></p>
     </div>
 
     <div class="card">
@@ -350,8 +402,12 @@ function render() {
   if (!S) return;
   const p = $('#power'); p.textContent = S.running ? 'ON' : 'OFF'; p.classList.toggle('on', S.running);
   if (!S.running) setTimeout(blackout, 50);
+  const noIp = new Set(S.devices.filter(d => !d.ip).map(d => d.id));
+  const n = S.lights.length;
+  $('#strip').style.setProperty('--cols', Math.min(Math.max(n, 1), n > 6 ? Math.ceil(n / Math.ceil(n / 6)) : 6));
+  $('#strip').style.setProperty('--wide', Math.min(Math.max(n, 1), 12));
   $('#strip').innerHTML = S.lights.map((l, i) => `
-    <button class="bulb ${l.on ? '' : 'off'} ${selected.has(l.id) ? 'sel' : ''}" data-bulb="${esc(l.id)}" data-live="${esc(l.id)}" title="${esc(l.name)}">
+    <button class="bulb ${l.on ? '' : 'off'} ${noIp.has(l.device) ? 'noip' : ''} ${selected.has(l.id) ? 'sel' : ''}" data-bulb="${esc(l.id)}" data-live="${esc(l.id)}" title="${esc(l.name)}">
       <span class="glow"></span><span class="cap"></span><span class="glass"></span>
       <span class="tag"><b>${i + 1}</b>${esc(l.name)}</span>
     </button>`).join('') || '<div class="empty">No lights on the string yet.</div>';
@@ -429,27 +485,34 @@ function renderLooks() {
   $('#musicOn').checked = S.music.enabled;
   $('#musicNote').innerHTML = S.music.enabled
     ? (S.music.live ? '🎵 Music feed is live.' : 'On, waiting for a music feed (POST <code>{level, beat}</code> to <code>/api/music</code>). Effects run on their own clock until it arrives.')
-    : 'Off. When on, anything that POSTs <code>{level, beat}</code> to <code>/api/music</code> drives Chase, Alternate, Sparkle and Music Pulse.';
+    : 'Off. The lights run fine without it. Turn it on later if you add music: Chase, Alternate, Sparkle and Music Pulse will follow the beat.';
 }
 
 function ago(ms) { if (!ms) return 'not heard from yet'; const s = Math.round((Date.now() - ms) / 1000); return s < 90 ? 'seen just now' : `seen ${Math.round(s / 60)} min ago`; }
 function renderDevices() {
   const box = $('#devices');
-  if (!S.devices.length) { box.innerHTML = '<div class="empty">None yet.</div>'; }
-  else box.innerHTML = S.devices.map(d => `
-    <div class="dev" data-dev="${esc(d.id)}">
-      <div class="grid2">
-        <div><label class="lbl">Name</label><input type="text" value="${esc(d.name)}" data-dname></div>
-        <div><label class="lbl">IP</label><input type="text" inputmode="decimal" value="${esc(d.ip)}" data-dip></div>
-      </div>
-      <div class="row">
-        <div class="grow"><label class="lbl">Lights on it</label><select data-dsegs>${[1,2,3,4,5,6,7,8].map(n => `<option ${n === d.segments ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
-        <button class="btn small" data-dsave style="align-self:flex-end">Save</button>
-        <button class="btn small" data-dprobe style="align-self:flex-end">Test</button>
-        <button class="btn small" data-ddel style="align-self:flex-end">Remove</button>
-      </div>
-      <p class="note">${esc(d.sku || 'Govee')} · ${ago(d.lastSeen)}</p>
-    </div>`).join('');
+  const focused = box.contains(document.activeElement);
+  if (!focused) {
+    box.innerHTML = S.devices.length ? S.devices.map(d => {
+      const lights = S.lights.filter(l => l.device === d.id);
+      const state = !d.ip ? '<span class="state empty">No IP yet · preview only</span>'
+        : d.lastSeen ? `<span class="state ok">${esc(d.sku || 'Govee')} · ${ago(d.lastSeen)}</span>`
+        : `<span class="state">${esc(d.sku || 'Govee')} · ${ago(d.lastSeen)}</span>`;
+      return `
+      <div class="slot" data-dev="${esc(d.id)}">
+        <div class="pairdots">${lights.map(l => `<div class="dot" data-live="${esc(l.id)}" title="${esc(l.name)}"></div>`).join('')}</div>
+        <div class="head"><input type="text" value="${esc(d.name)}" data-dname aria-label="Pair name">
+          <span class="badge ${d.ip ? 'ok' : ''}">${d.ip ? 'set' : 'empty'}</span></div>
+        <div class="ipline">
+          <input type="text" inputmode="decimal" placeholder="IP, e.g. 192.168.1.50" value="${esc(d.ip)}" data-dip aria-label="IP">
+          <select data-dsegs aria-label="Lights on it">${[1,2,3,4].map(k => `<option value="${k}" ${k === d.segments ? 'selected' : ''}>${k === 2 ? '2 lights' : k === 1 ? '1 light' : k + ' lights'}</option>`).join('')}</select>
+          <button class="btn small" data-dsave>Save</button>
+          <button class="btn small" data-dprobe ${d.ip ? '' : 'disabled'}>Test</button>
+          <button class="btn small" data-ddel aria-label="Remove pair">✕</button>
+        </div>
+        ${state}
+      </div>`; }).join('') : '<div class="empty">No pairs. Add one below.</div>';
+  }
   $('#order').innerHTML = S.lights.length ? S.lights.map((l, i) => `
     <div class="pl order"><div class="dot" data-live="${esc(l.id)}"></div>
       <div class="grow">${i + 1}. <input type="text" value="${esc(l.name)}" data-lname="${esc(l.id)}" style="display:inline-block;width:70%;padding:6px"></div>
@@ -461,9 +524,15 @@ function renderFound() {
   if (!S) return;
   const known = new Set(S.devices.map(d => d.ip));
   const fresh = found.filter(f => !known.has(f.ip));
+  const empty = S.devices.filter(d => !d.ip);
+  if (document.activeElement && $('#found').contains(document.activeElement)) return;
   $('#found').innerHTML = fresh.map(f => `
     <div class="pl"><div class="grow"><b>${esc(f.sku || 'Govee light')}</b> <span class="note">${esc(f.ip)}</span></div>
-      <button class="btn small" data-addfound="${esc(f.ip)}" data-sku="${esc(f.sku)}">Add</button></div>`).join('');
+      <select data-slotfor="${esc(f.ip)}" style="width:auto;padding:7px">
+        ${empty.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('')}
+        <option value="new">New pair</option>
+      </select>
+      <button class="btn small go" data-addfound="${esc(f.ip)}" data-sku="${esc(f.sku)}">Use</button></div>`).join('');
 }
 function renderLog() { const el = $('#log'); el.textContent = logs.slice().reverse().map(l => `${new Date(l.at).toLocaleTimeString()}  ${l.msg}`).join('\n'); }
 
@@ -536,16 +605,19 @@ $('#musicOn').onchange = (e) => api('/api/music/enable', { enabled: e.target.che
 $('#scan').onclick = () => { api('/api/scan'); $('#scanNote').textContent = 'Scanning…'; setTimeout(() => { $('#scanNote').textContent = found.length ? '' : 'Nothing answered. Check LAN Control in the Govee app, or add by IP.'; }, 4000); };
 $('#found').onclick = (e) => {
   const b = e.target.closest('[data-addfound]'); if (!b) return;
-  const segs = prompt('How many lights on this controller? (2 for a Spotlight 2-pack)', '2'); if (segs === null) return;
-  const name = prompt('Name it (e.g. Porch)', b.dataset.sku || 'Light'); if (name === null) return;
-  api('/api/devices', { ip: b.dataset.addfound, sku: b.dataset.sku, name, segments: +segs || 1 });
+  const ip = b.dataset.addfound, sku = b.dataset.sku;
+  const slot = b.parentElement.querySelector('[data-slotfor]').value;
+  if (slot === 'new') api('/api/devices', { ip, sku, segments: 2 });
+  else api(`/api/devices/${slot}`, { ip, sku });
 };
-$('#addBtn').onclick = async () => { if (await api('/api/devices', { ip: $('#addIp').value, name: $('#addName').value, segments: +$('#addSegs').value })) { $('#addIp').value = ''; $('#addName').value = ''; } };
+$('#addPair').onclick = () => api('/api/devices', { segments: 2 });
+$('#devices').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('input')) { const box = e.target.closest('[data-dev]'); box.querySelector('[data-dsave]').click(); } });
+$('#devices').addEventListener('focusout', () => setTimeout(() => { if (!$('#devices').contains(document.activeElement)) renderDevices(); }, 0));
 $('#devices').addEventListener('click', async (e) => {
   const box = e.target.closest('[data-dev]'); if (!box) return;
   const id = box.dataset.dev;
-  if (e.target.matches('[data-dsave]')) api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, segments: +box.querySelector('[data-dsegs]').value });
-  if (e.target.matches('[data-ddel]') && confirm('Remove this controller?')) api(`/api/devices/${id}`, null, 'DELETE');
+  if (e.target.matches('[data-dsave]')) { e.target.blur(); api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, segments: +box.querySelector('[data-dsegs]').value }); }
+  if (e.target.matches('[data-ddel]') && confirm('Remove this pair and its lights?')) api(`/api/devices/${id}`, null, 'DELETE');
   if (e.target.matches('[data-dprobe]')) { e.target.textContent = '…'; const r = await api(`/api/devices/${id}/probe`); e.target.textContent = 'Test'; if (r) toast(r.status.ok ? `Answered: ${r.status.status.onOff ? 'on' : 'off'}, brightness ${r.status.status.brightness}` : 'No answer — check the IP and LAN Control'); }
 });
 $('#order').addEventListener('click', (e) => {
@@ -557,6 +629,39 @@ $('#order').addEventListener('click', (e) => {
   api('/api/lights/order', { order: o });
 });
 $('#order').addEventListener('change', (e) => { if (e.target.dataset.lname) api('/api/lights', { ids: [e.target.dataset.lname], name: e.target.value }); });
+
+// ── Decorations ──
+(function garland() {
+  const cols = ['#ff3b3b', '#36d46a', '#ffd23f', '#3fa0ff', '#ff7ad9', '#ffffff'];
+  const n = Math.max(12, Math.round(innerWidth / 26));
+  $('#garland').innerHTML = Array.from({ length: n }, (_, i) => `<i style="--b:${cols[i % cols.length]};--d:${(-i * 0.37 % 2.4).toFixed(2)}s"></i>`).join('');
+})();
+(function snow() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cv = $('#snow'), cx = cv.getContext('2d');
+  let w, h, flakes = [];
+  const size = () => {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    w = innerWidth; h = innerHeight; cv.width = w * dpr; cv.height = h * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const want = Math.round(w * h / 9000);
+    while (flakes.length < want) flakes.push(mk(true));
+    flakes.length = want;
+  };
+  const mk = (anywhere) => ({ x: Math.random() * w, y: anywhere ? Math.random() * h : -5, r: .6 + Math.random() * 1.8, v: .25 + Math.random() * .6, p: Math.random() * 6.28 });
+  addEventListener('resize', size); size();
+  (function loop() {
+    if (!document.hidden) {
+      cx.clearRect(0, 0, w, h); cx.fillStyle = 'rgba(255,255,255,.75)'; cx.beginPath();
+      for (const f of flakes) {
+        f.y += f.v * (0.6 + f.r * .35); f.p += .012; f.x += Math.sin(f.p) * .3;
+        if (f.y > h + 4) Object.assign(f, mk(false));
+        cx.moveTo(f.x + f.r, f.y); cx.arc(f.x, f.y, f.r, 0, 6.283);
+      }
+      cx.fill();
+    }
+    requestAnimationFrame(loop);
+  })();
+})();
 
 connect();
 </script>
