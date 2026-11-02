@@ -47,7 +47,8 @@ The page installs to a home screen with its own icon and name.
   1. Open `http://192.168.1.118:3100/ca.crt` to download the certificate.
   2. Settings → search **"certificate"** → **Install a certificate** →
      **CA certificate** → Install anyway → pick `christmas-lights-ca.crt`.
-  3. Open `https://192.168.1.118:3101` in Chrome → menu (⋮) → **Install app**.
+  3. Open `https://192.168.1.118:3101` in Chrome → menu (⋮) → **Save and
+     share** → **Install app** (newer Chrome tucks it in there).
   (Without the certificate, menu → Add to Home screen on the http address
   still gives an icon; it just opens with the address bar.)
 - **iPhone / iPad (Safari)**: Share → **Add to Home Screen**. Opens full
