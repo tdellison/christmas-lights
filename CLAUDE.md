@@ -10,6 +10,11 @@ Govee LAN, ptReal and queue rules apply.
   tick, sends only on change, at most one packet per device per tick, skips
   a device whose queue is busy. Also looks, rotate, schedule and the music
   feed.
+- Zones: `cfg.zones` (front-left, front-right, back) each with off, current
+  look, optional own schedule; devices have `zone`; `front` = both front
+  zones. Effect groups are per zone. Govee scenes per zone need `d.mac`
+  (from Scan → Use). The elves get the zone from the request words when
+  Llama leaves it out (`zoneInText`).
 - `lib/effects.js`: `fx(ctx) -> {r,g,b}`. Keep effects pure functions of
   `ctx.t`. Per-light random state goes in `ctx.mem`.
 - `lib/llama.js` + `lib/assistant.js`: "Ask the elves". Local Llama 3.1 8B

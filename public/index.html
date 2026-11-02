@@ -301,6 +301,36 @@
   .footer { text-align: center; color: #8ea0c8; font: 700 22px "Mountains of Christmas", Georgia, serif; margin: 26px 0 8px; }
   .footer span { color: var(--gold); }
 
+  /* ════ Zones ════ */
+  #strip { display: flex; flex-wrap: wrap; gap: 4px 14px; position: relative; z-index: 1; }
+  .zone-row { flex: var(--n) 1 calc(var(--n) * 54px); min-width: 0; }
+  .zone-row .string { grid-template-columns: repeat(var(--n), minmax(0, 76px)) !important; justify-content: center; }
+  .zcap { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 2px 0 -2px; background: none; border: 0; width: 100%;
+    font: 700 17px "Mountains of Christmas", Georgia, serif; color: var(--gold); text-shadow: 0 0 10px rgba(246,197,91,.35); cursor: pointer; }
+  .zcap small { font: 600 11px system-ui, sans-serif; color: #9fb0d4; text-shadow: none; }
+  .zcap .zoff { font: 700 10px system-ui, sans-serif; color: #ffb4b8; background: rgba(227,55,63,.2); padding: 1px 7px; border-radius: 999px; text-shadow: none; }
+  .zone-row.dim { opacity: .38; }
+  .zone-row.zoneoff .glass { filter: grayscale(.6) brightness(.6); }
+  .zonebar { max-width: 720px; margin: 6px auto 0; padding: 0 16px; position: relative; z-index: 2; }
+  .zchips { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 4px; }
+  .zchips::-webkit-scrollbar { display: none; }
+  .zchips button { flex: none; display: flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 999px; font-size: 14px; font-weight: 700;
+    border: 1px solid #2b6a4a; background: #0f3626; color: var(--text); }
+  .zchips button i { width: 8px; height: 8px; border-radius: 50%; background: #5a6a88; }
+  .zchips button i.on { background: #7dff9f; box-shadow: 0 0 6px #5dff8f; }
+  .zchips button.sel { background: linear-gradient(180deg, #d8323a, #a81f27); border-color: #ff6a6f; color: #fff; box-shadow: 0 0 14px rgba(227,55,63,.4); }
+  .zinfo { display: flex; align-items: center; gap: 10px; margin-top: 6px; padding: 8px 12px; border-radius: 14px;
+    background: rgba(10,38,27,.85); border: 1px solid #2b6a4a; font-size: 14px; }
+  .zinfo:empty { display: none; }
+  .zinfo b { color: var(--warm); }
+  .zrot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .zrot button { font-size: 13px; padding: 6px 11px; border-radius: 999px; border: 1px solid #2b6a4a; background: #0f3626; color: var(--text); }
+  .zrot button.on { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+  .zsch { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 10px 0; border-top: 1px solid #1f4d37; }
+  .zsch .times { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .zsch .times input { padding: 8px; }
+  .slot select[data-dzone] { width: auto; padding: 7px; font-size: 14px; }
+
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } #snow { display: none; } }
 </style>
 </head>
@@ -354,6 +384,11 @@
   </div>
 </div>
 
+<div class="zonebar">
+  <div class="zchips" id="zchips"></div>
+  <div class="zinfo" id="zinfo"></div>
+</div>
+
 <main>
   <!-- LIGHTS -->
   <section id="tab-lights" class="active">
@@ -364,7 +399,7 @@
         <button class="btn primary" id="askBtn">Send</button>
       </form>
       <div class="ideas" id="ideas">
-        <button>Something cozy</button><button>Red and green chase</button><button>Snowfall on lights 1 to 6</button>
+        <button>Something cozy</button><button>Candy cane out front, warm twinkle out back</button><button>Red and green chase on front left</button><button>Turn off the backyard</button>
         <button>Brighter</button><button>Slower</button><button>Change looks every 15 minutes</button><button>Turn on at 4:30, off at 11</button>
       </div>
       <div class="talk" id="talk"></div>
@@ -403,7 +438,7 @@
   <!-- LOOKS -->
   <section id="tab-looks">
     <div class="card">
-      <h2>Looks</h2>
+      <h2 id="looksTitle">Looks</h2>
       <div class="looks" id="looks"></div>
       <div class="row" style="margin-top:12px">
         <input class="grow" id="lookName" type="text" placeholder="Name this look">
@@ -417,6 +452,7 @@
         <div class="grow">Change the look every <input id="rotMin" type="number" min="1" max="240" style="width:80px;display:inline-block"> min</div>
         <label class="switch"><input id="rotOn" type="checkbox"><span></span></label>
       </div>
+      <div class="zrot" id="rotZones"></div>
       <p class="note" id="rotNext"></p>
       <div id="playlist"></div>
       <div class="row" style="margin-top:10px"><button class="btn" id="rotNextBtn">Next look now</button></div>
@@ -433,6 +469,7 @@
         <div><label class="lbl">Off at</label><input id="schEnd" type="time"></div>
       </div>
       <p class="note" id="schTz"></p>
+      <div id="zoneSched"></div>
     </div>
   </section>
 
@@ -500,6 +537,15 @@
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let S = null, found = [], logs = [], AI = null, asking = null, G = null;
+let zoneSel = 'all';   // 'all' | group id ('front') | zone id
+try { zoneSel = localStorage.getItem('zoneSel') || 'all'; } catch (_) {}
+const zonesOf = (sel) => !S ? [] : sel === 'all' ? S.zones.map(z => z.id) : (S.groups.find(g => g.id === sel) || {}).zones || (S.zones.some(z => z.id === sel) ? [sel] : S.zones.map(z => z.id));
+const zoneName = (sel) => sel === 'all' ? 'Whole yard' : ([...S.groups, ...S.zones].find(z => z.id === sel) || {}).name || sel;
+const inSel = (l) => zonesOf(zoneSel).includes(l.zone);
+const visibleLights = () => S.lights.filter(inSel);
+// The look on the selected zones if they agree.
+function selLook() { const c = zonesOf(zoneSel).map(id => S.zones.find(z => z.id === id).current); return c.length && c.every(x => x && x === c[0]) ? c[0] : null; }
+function pickZone(sel) { zoneSel = sel; try { localStorage.setItem('zoneSel', sel); } catch (_) {} selected.clear(); render(); }
 let live = {};         // last preview colour per light, repainted after each re-render
 const selected = new Set();
 let editing = false;   // don't redraw the editor while a slider is held
@@ -553,16 +599,25 @@ function render() {
   const p = $('#power'); p.textContent = S.running ? 'ON' : 'OFF'; p.classList.toggle('on', S.running);
   if (!S.running) setTimeout(blackout, 50);
   const noIp = new Set(S.devices.filter(d => !d.ip).map(d => d.id));
-  const n = S.lights.length;
-  $('#strip').style.setProperty('--cols', Math.min(Math.max(n, 1), n > 6 ? Math.ceil(n / Math.ceil(n / 6)) : 6));
-  $('#strip').style.setProperty('--wide', Math.min(Math.max(n, 1), 12));
-  $('#strip').innerHTML = S.lights.map((l, i) => `
+  if (zoneSel !== 'all' && !S.groups.some(g => g.id === zoneSel) && !S.zones.some(z => z.id === zoneSel)) zoneSel = 'all';
+  const num = new Map(S.lights.map((l, i) => [l.id, i + 1]));
+  const bulb = (l) => `
     <button class="bulb ${S.running ? '' : 'idle'} ${l.on ? '' : 'off'} ${noIp.has(l.device) ? 'noip' : ''} ${selected.has(l.id) ? 'sel' : ''}" style="--idle:${esc(l.palette[0])}" data-bulb="${esc(l.id)}" data-live="${esc(l.id)}" title="${esc(l.name)}">
       <span class="glow"></span><span class="cap"></span><span class="glass"></span>
-      <span class="tag"><b>${i + 1}</b>${esc(l.name)}</span>
-    </button>`).join('') || '<div class="empty">No lights on the string yet.</div>';
+      <span class="tag"><b>${num.get(l.id)}</b>${esc(l.name)}</span>
+    </button>`;
+  const sel = zonesOf(zoneSel);
+  $('#strip').innerHTML = S.zones.map(z => {
+    const ls = S.lights.filter(l => l.zone === z.id); if (!ls.length) return '';
+    const look = S.looks.find(x => x.id === z.current);
+    return `<div class="zone-row ${sel.includes(z.id) ? '' : 'dim'} ${z.off ? 'zoneoff' : ''}" style="--n:${Math.min(ls.length, 6)}">
+      <button class="zcap" data-zcap="${esc(z.id)}">${esc(z.name)} ${z.off ? '<span class="zoff">off</span>' : look ? `<small>${esc(look.name)}</small>` : ''}</button>
+      <div class="string">${ls.map(bulb).join('')}</div></div>`;
+  }).join('') || '<div class="empty">No lights on the string yet.</div>';
+  renderZones();
   const cur = S.looks.find(l => l.id === S.current);
-  $('#nowLook').textContent = cur ? cur.name + (cur.govee ? ' (Govee)' : '') : (S.lights.length ? 'Custom' : 'No lights yet — go to Setup');
+  const mixed = S.zones.some(z => z.current) ? 'Mixed looks' : 'Custom';
+  $('#nowLook').textContent = cur ? cur.name + (cur.govee ? ' (Govee)' : '') : (S.lights.length ? mixed : 'No lights yet — go to Setup');
   if (document.activeElement !== $('#master')) { $('#master').value = S.master; }
   $('#masterVal').textContent = S.master + '%';
   // keep selection valid
@@ -571,12 +626,27 @@ function render() {
   if (S.running) paintPreview(live);
 }
 
+function renderZones() {
+  const opts = [{ id: 'all', name: 'Whole yard' }, ...S.groups, ...S.zones];
+  $('#zchips').innerHTML = opts.map(o => {
+    const on = S.running && zonesOf(o.id).some(id => !S.zones.find(z => z.id === id).off);
+    return `<button class="${o.id === zoneSel ? 'sel' : ''}" data-zsel="${esc(o.id)}"><i class="${on ? 'on' : ''}"></i>${esc(o.name)}</button>`;
+  }).join('');
+  if (zoneSel === 'all') { $('#zinfo').innerHTML = ''; return; }
+  const zs = zonesOf(zoneSel).map(id => S.zones.find(z => z.id === id));
+  const look = S.looks.find(l => l.id === selLook());
+  const on = zs.some(z => !z.off);
+  $('#zinfo').innerHTML = `<div class="grow"><b>${esc(zoneName(zoneSel))}</b> · ${look ? esc(look.name) : 'custom'}${!S.running ? ' · show is off' : ''}</div>
+    <label class="switch"><input type="checkbox" id="zPower" ${on ? 'checked' : ''}><span></span></label>`;
+}
+
 function effName(id) { return (S.effects.find(e => e.id === id) || {}).name || id; }
 
 function renderLights() {
   const box = $('#lights');
   if (!S.lights.length) { box.innerHTML = '<div class="empty">No lights yet. Add them in Setup.</div>'; return; }
-  box.innerHTML = S.lights.map(l => `
+  const vis = visibleLights();
+  box.innerHTML = vis.map(l => `
     <div class="light ${selected.has(l.id) ? 'sel' : ''}" data-id="${esc(l.id)}">
       <input type="checkbox" class="check" data-sel="${esc(l.id)}" ${selected.has(l.id) ? 'checked' : ''}>
       <div class="dot" data-live="${esc(l.id)}" style="--idle:${esc(l.palette[0])}"></div>
@@ -586,7 +656,7 @@ function renderLights() {
       </div>
       <label class="switch"><input type="checkbox" data-on="${esc(l.id)}" ${l.on ? 'checked' : ''}><span></span></label>
     </div>`).join('');
-  $('#selAll').textContent = selected.size === S.lights.length ? 'Clear' : 'Select all';
+  $('#selAll').textContent = vis.length && vis.every(l => selected.has(l.id)) ? 'Clear' : 'Select all';
 }
 
 function targets() { return [...selected]; }
@@ -616,10 +686,19 @@ function renderLooks() {
     return [];
   };
   $('#looks').innerHTML = S.looks.map(l => `
-    <button class="look ${l.govee ? 'gv' : ''} ${l.id === S.current ? 'on' : ''}" data-look="${esc(l.id)}">${esc(l.name)}
+    <button class="look ${l.govee ? 'gv' : ''} ${l.id === selLook() ? 'on' : ''}" data-look="${esc(l.id)}">${esc(l.name)}
       <small>${l.govee === 'diy' ? 'Your Govee DIY' : l.govee ? 'Govee scene' : l.builtin ? esc(effName(l.effect)) : 'Saved look'}</small>
       <div class="bar">${l.govee ? '<i></i>' : (palOf(l).length ? palOf(l) : ['#555']).map(c => `<i style="background:${c};color:${c}"></i>`).join('')}</div>
     </button>`).join('');
+  $('#looksTitle').textContent = zoneSel === 'all' ? 'Looks' : `Looks · ${zoneName(zoneSel)}`;
+  const rz = S.rotate.zones || S.zones.map(z => z.id);
+  $('#rotZones').innerHTML = '<span class="note" style="margin:0;align-self:center">Rotate in:</span>' + S.zones.map(z => `<button class="${rz.includes(z.id) ? 'on' : ''}" data-rz="${esc(z.id)}">${esc(z.name)}</button>`).join('');
+  if (!document.activeElement || !$('#zoneSched').contains(document.activeElement)) $('#zoneSched').innerHTML = S.zones.map(z => {
+    const zs = z.schedule || { enabled: false, on: S.schedule.on, off: S.schedule.off };
+    return `<div class="zsch" data-zs="${esc(z.id)}"><div>${esc(z.name)}: <span class="note">${zs.enabled ? 'own times' : 'follows the yard'}</span></div>
+      <label class="switch"><input type="checkbox" data-zsen ${zs.enabled ? 'checked' : ''}><span></span></label>
+      ${zs.enabled ? `<div class="times"><div><label class="lbl">On at</label><input type="time" data-zson value="${zs.on.padStart(5, '0')}"></div><div><label class="lbl">Off at</label><input type="time" data-zsoff value="${zs.off.padStart(5, '0')}"></div></div>` : ''}</div>`;
+  }).join('');
   if (document.activeElement !== $('#rotMin')) $('#rotMin').value = S.rotate.minutes;
   $('#rotOn').checked = S.rotate.enabled;
   $('#rotNext').textContent = S.rotate.enabled && S.rotate.nextAt ? `Next change at ${new Date(S.rotate.nextAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : (S.rotate.enabled && !S.running ? 'Starts when the lights are on.' : '');
@@ -653,7 +732,8 @@ function renderDevices() {
       <div class="slot" data-dev="${esc(d.id)}">
         <div class="pairdots">${lights.map(l => `<div class="dot" data-live="${esc(l.id)}" title="${esc(l.name)}"></div>`).join('')}</div>
         <div class="head"><input type="text" value="${esc(d.name)}" data-dname aria-label="Pair name">
-          ${d.kind === 'brmesh' ? '<span class="badge bt">Bluetooth</span>' : ''}<span class="badge ${d.ip ? 'ok' : ''}">${d.ip ? 'set' : 'empty'}</span></div>
+          <select data-dzone aria-label="Zone">${S.zones.map(z => `<option value="${esc(z.id)}" ${z.id === d.zone ? 'selected' : ''}>${esc(z.name)}</option>`).join('')}</select>
+          ${d.kind === 'brmesh' ? '<span class="badge bt">BT</span>' : ''}<span class="badge ${d.ip ? 'ok' : ''}">${d.ip ? 'set' : 'empty'}</span></div>
         <div class="ipline">
           <input type="text" inputmode="decimal" placeholder="${d.kind === 'brmesh' ? 'ESP32 IP' : 'IP, e.g. 192.168.1.50'}" value="${esc(d.ip)}" data-dip aria-label="IP">
           ${d.kind === 'brmesh' ? `<input type="text" value="${esc((d.ble || []).join(', '))}" data-dble aria-label="ESPHome light names" title="ESPHome light names" style="flex:1 1 150px;min-width:0;padding:8px 10px">` : ''}
@@ -684,7 +764,7 @@ function renderFound() {
         ${empty.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('')}
         <option value="new">New pair</option>
       </select>
-      <button class="btn small go" data-addfound="${esc(f.ip)}" data-sku="${esc(f.sku)}">Use</button></div>`).join('');
+      <button class="btn small go" data-addfound="${esc(f.ip)}" data-sku="${esc(f.sku)}" data-mac="${esc(f.device || '')}">Use</button></div>`).join('');
 }
 function renderGovee() {
   if (!G) return;
@@ -740,7 +820,7 @@ $('#strip').addEventListener('click', (e) => {
   document.querySelectorAll('nav button')[0].click();
   if (selected.size) $('#editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
-$('#selAll').onclick = () => { if (selected.size === S.lights.length) selected.clear(); else S.lights.forEach(l => selected.add(l.id)); renderLights(); renderEditor(); markBulbs(); };
+$('#selAll').onclick = () => { const vis = visibleLights(); if (vis.length && vis.every(l => selected.has(l.id))) selected.clear(); else { selected.clear(); vis.forEach(l => selected.add(l.id)); } renderLights(); renderEditor(); markBulbs(); };
 
 const patchSel = (patch) => targets().length && api('/api/lights', { ids: targets(), ...patch });
 $('#edEffect').onchange = (e) => patchSel({ effect: e.target.value, on: true });
@@ -762,7 +842,24 @@ $('#edOn').onclick = () => patchSel({ on: true });
 $('#edOff').onclick = () => patchSel({ on: false });
 $('#edIdent').onclick = () => { const ids = targets(); if (ids.length !== 1) return toast('Tick just one light to find it'); api('/api/lights/identify', { id: ids[0] }); };
 
-$('#looks').onclick = (e) => { const b = e.target.closest('[data-look]'); if (b) api('/api/looks/apply', { id: b.dataset.look }); };
+$('#looks').onclick = (e) => { const b = e.target.closest('[data-look]'); if (b) api('/api/looks/apply', { id: b.dataset.look, zone: zoneSel === 'all' ? undefined : zoneSel }); };
+$('#zchips').onclick = (e) => { const b = e.target.closest('[data-zsel]'); if (b) pickZone(b.dataset.zsel); };
+$('#strip').addEventListener('click', (e) => { const c = e.target.closest('[data-zcap]'); if (c) { e.stopPropagation(); pickZone(c.dataset.zcap); } }, true);
+$('#zinfo').addEventListener('change', (e) => { if (e.target.id === 'zPower') api(`/api/zones/${zoneSel}`, { off: !e.target.checked }); });
+$('#rotZones').onclick = (e) => {
+  const b = e.target.closest('[data-rz]'); if (!b) return;
+  const cur = S.rotate.zones || S.zones.map(z => z.id);
+  const next = cur.includes(b.dataset.rz) ? cur.filter(z => z !== b.dataset.rz) : [...cur, b.dataset.rz];
+  if (!next.length) return toast('Rotate needs at least one zone');
+  api('/api/rotate', { zones: next.length === S.zones.length ? 'all' : next });
+};
+$('#zoneSched').addEventListener('change', (e) => {
+  const row = e.target.closest('[data-zs]'); if (!row) return;
+  const id = row.dataset.zs;
+  if (e.target.matches('[data-zsen]')) api(`/api/zones/${id}`, { schedule: { enabled: e.target.checked } });
+  if (e.target.matches('[data-zson]')) api(`/api/zones/${id}`, { schedule: { on: e.target.value } });
+  if (e.target.matches('[data-zsoff]')) api(`/api/zones/${id}`, { schedule: { off: e.target.value } });
+});
 $('#lookSave').onclick = async () => { const n = $('#lookName').value.trim(); if (!n) return toast('Type a name first'); if (await api('/api/looks/save', { name: n })) $('#lookName').value = ''; };
 $('#rotOn').onchange = (e) => api('/api/rotate', { enabled: e.target.checked });
 $('#rotMin').onchange = (e) => api('/api/rotate', { minutes: +e.target.value });
@@ -780,13 +877,14 @@ $('#musicOn').onchange = (e) => api('/api/music/enable', { enabled: e.target.che
 $('#scan').onclick = () => { api('/api/scan'); $('#scanNote').textContent = 'Scanning…'; setTimeout(() => { $('#scanNote').textContent = found.length ? '' : 'Nothing answered. Check LAN Control in the Govee app, or add by IP.'; }, 4000); };
 $('#found').onclick = (e) => {
   const b = e.target.closest('[data-addfound]'); if (!b) return;
-  const ip = b.dataset.addfound, sku = b.dataset.sku;
+  const ip = b.dataset.addfound, sku = b.dataset.sku, mac = b.dataset.mac || undefined;
   const slot = b.parentElement.querySelector('[data-slotfor]').value;
-  if (slot === 'new') api('/api/devices', { ip, sku, segments: 2 });
-  else api(`/api/devices/${slot}`, { ip, sku });
+  if (slot === 'new') api('/api/devices', { ip, sku, mac, segments: 2, zone: zoneSel !== 'all' && S.zones.some(z => z.id === zoneSel) ? zoneSel : undefined });
+  else api(`/api/devices/${slot}`, { ip, sku, mac });
 };
 $('#addPair').onclick = () => api('/api/devices', { segments: 2 });
 $('#addBle').onclick = () => api('/api/devices', { segments: 2, kind: 'brmesh' });
+$('#devices').addEventListener('change', (e) => { if (e.target.matches('[data-dzone]')) { const id = e.target.closest('[data-dev]').dataset.dev; e.target.blur(); api(`/api/devices/${id}`, { zone: e.target.value }); } });
 $('#devices').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('input')) { const box = e.target.closest('[data-dev]'); box.querySelector('[data-dsave]').click(); } });
 $('#devices').addEventListener('focusout', () => setTimeout(() => { if (!$('#devices').contains(document.activeElement)) renderDevices(); }, 0));
 $('#devices').addEventListener('click', async (e) => {

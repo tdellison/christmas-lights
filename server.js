@@ -45,7 +45,7 @@ let engine = null;
 const sendStatus = () => engine && broadcast({ type: 'status', data: engine.status() });
 const cloud = createGoveeCloud({ file: SECRETS, log, onChange: () => { sendStatus(); broadcast({ type: 'cloud', data: cloud.status() }); } });
 const brmesh = createBrmesh({ log });
-engine = createEngine({ file: DATA, govee, brmesh, log, onChange: sendStatus, external: { looks: () => cloud.looks(), play: (k) => cloud.play(k), power: (on) => cloud.power(on) } });
+engine = createEngine({ file: DATA, govee, brmesh, log, onChange: sendStatus, external: { looks: () => cloud.looks(), play: (k, macs) => cloud.play(k, macs), power: (on) => cloud.power(on) } });
 
 // Ask the elves: plain-English commands through local Llama.
 const aiState = () => ({ ...llama.status(), history: assistant.history() });
@@ -87,7 +87,9 @@ app.post('/api/lights', route(({ ids, ...patch }) => engine.setLights(ids, patch
 app.post('/api/lights/order', route(({ order }) => engine.setOrder(order)));
 app.post('/api/lights/identify', route(({ id }) => engine.identify(id)));
 
-app.post('/api/looks/apply', route(({ id }) => engine.applyLook(id)));
+app.post('/api/looks/apply', route(({ id, zone }) => engine.applyLook(id, zone)));
+// { name, off, schedule: { enabled, on, off } }
+app.post('/api/zones/:id', route((b, req) => engine.setZone(req.params.id, b)));
 app.post('/api/looks/save', route(({ name }) => engine.saveLook(name)));
 app.post('/api/looks/delete', route(({ id }) => engine.deleteLook(id)));
 app.post('/api/looks/next', route(() => engine.nextLook()));

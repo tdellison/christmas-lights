@@ -37,6 +37,20 @@ Auto-start: see `deploy/christmas-lights.service`.
   OFF holds until the next on time.
 - If the server restarts while the lights were on, they come back on.
 
+## Zones
+
+The yard is split into **Front Left**, **Front Right** and **Backyard**
+(Setup: pick each pair's zone). **Front yard** means both front zones
+together. Tap a zone under the yard picture (or its name above its lights)
+and the Lights and Looks tabs work on just that zone; **Whole yard** works on
+everything. Each zone has its own on/off switch and can have its own on/off
+times (Looks → Schedule). Auto-rotate can be limited to some zones ("Rotate
+in"). Chases and waves run within a zone. The elves understand zones:
+"candy cane out front, warm twinkle out back", "turn off the backyard".
+
+A Govee scene can play in one zone only if the app knows which Govee lights
+are in it: add them with **Scan → Use** (that records their hardware id).
+
 ## Bluetooth lights (BRMesh app)
 
 BRMesh lights only talk Bluetooth, so an ESP32 does the talking. It runs
