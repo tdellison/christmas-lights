@@ -37,6 +37,19 @@ Auto-start: see `deploy/christmas-lights.service`.
   OFF holds until the next on time.
 - If the server restarts while the lights were on, they come back on.
 
+## Install as an app
+
+The page installs to a home screen with its own icon and name.
+
+- **Android tablet (Chrome)**: open `http://192.168.1.118:3100`, menu (⋮) →
+  **Add to Home screen**. That gives an icon that opens the page. For full
+  screen with no address bar, Chrome needs the address marked as trusted
+  first (it only fully installs apps from https): open
+  `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, enter
+  `http://192.168.1.118:3100`, Enable, Relaunch, then menu → **Install app**.
+- **iPhone / iPad (Safari)**: Share → **Add to Home Screen**. Opens full
+  screen.
+
 ## Zones
 
 The yard is split into **Front Left**, **Front Right** and **Backyard**

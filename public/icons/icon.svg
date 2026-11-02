@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#173f86"/><stop offset="1" stop-color="#06102a"/></radialGradient>
+    <radialGradient id="glow" cx=".5" cy=".55" r=".5"><stop offset="0" stop-color="#ff4a52" stop-opacity=".75"/><stop offset="1" stop-color="#ff4a52" stop-opacity="0"/></radialGradient>
+    <radialGradient id="bulb" cx=".38" cy=".3" r=".75"><stop offset="0" stop-color="#ffd0d2"/><stop offset=".35" stop-color="#ff3a44"/><stop offset="1" stop-color="#a5121b"/></radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="0" fill="url(#bg)"/>
+  <g fill="#fff" opacity=".8"><circle cx="90" cy="110" r="5"/><circle cx="410" cy="90" r="4"/><circle cx="440" cy="300" r="5"/><circle cx="70" cy="330" r="4"/><circle cx="150" cy="430" r="5"/><circle cx="380" cy="440" r="4"/></g>
+  <path d="M40 120 Q256 220 472 120" fill="none" stroke="#1f6a3a" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="256" cy="300" r="190" fill="url(#glow)"/>
+  <rect x="226" y="160" width="60" height="50" rx="10" fill="#2f6b42"/>
+  <path d="M256 200 C330 200 360 290 344 340 C330 385 296 410 256 410 C216 410 182 385 168 340 C152 290 182 200 256 200 Z" fill="url(#bulb)"/>
+  <ellipse cx="222" cy="262" rx="20" ry="34" fill="#fff" opacity=".45" transform="rotate(-18 222 262)"/>
+  <circle cx="110" cy="166" r="16" fill="#36d46a"/><circle cx="400" cy="166" r="16" fill="#ffd23f"/>
+</svg>
