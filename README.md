@@ -41,12 +41,15 @@ Auto-start: see `deploy/christmas-lights.service`.
 
 The page installs to a home screen with its own icon and name.
 
-- **Android tablet (Chrome)**: open `http://192.168.1.118:3100`, menu (⋮) →
-  **Add to Home screen**. That gives an icon that opens the page. For full
-  screen with no address bar, Chrome needs the address marked as trusted
-  first (it only fully installs apps from https): open
-  `chrome://flags/#unsafely-treat-insecure-origin-as-secure`, enter
-  `http://192.168.1.118:3100`, Enable, Relaunch, then menu → **Install app**.
+- **Android tablet (Chrome)**: Chrome only installs full-screen apps from
+  https, so the app also runs on `https://192.168.1.118:3101` with its own
+  local certificate. Once per tablet:
+  1. Open `http://192.168.1.118:3100/ca.crt` to download the certificate.
+  2. Settings → search **"certificate"** → **Install a certificate** →
+     **CA certificate** → Install anyway → pick `christmas-lights-ca.crt`.
+  3. Open `https://192.168.1.118:3101` in Chrome → menu (⋮) → **Install app**.
+  (Without the certificate, menu → Add to Home screen on the http address
+  still gives an icon; it just opens with the address bar.)
 - **iPhone / iPad (Safari)**: Share → **Add to Home Screen**. Opens full
   screen.
 

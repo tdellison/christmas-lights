@@ -3,3 +3,4 @@ config.json
 secrets.json
 deploy/secrets.yaml
 deploy/.esphome/
+tls/

@@ -4,7 +4,9 @@
 'use strict';
 
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
+const https = require('https');
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const { createGovee } = require('./lib/govee');
@@ -15,6 +17,8 @@ const { createEsphome } = require('./lib/esphome');
 const { createAssistant } = require('./lib/assistant');
 
 const PORT = Number(process.env.PORT) || 3100;
+const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 3101;
+const TLS = path.join(__dirname, 'tls');
 const DATA = process.env.CHRISTMAS_LIGHTS_CONFIG || path.join(__dirname, 'config.json');
 const SECRETS = process.env.CHRISTMAS_LIGHTS_SECRETS || path.join(__dirname, 'secrets.json');
 
@@ -22,7 +26,14 @@ const app = express();
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
+// HTTPS twin (tls/, git-ignored): Android Chrome only installs the page as a
+// full-screen app from a secure origin. tls/ca.crt is a local CA the tablet
+// trusts once (README "Install as an app"); it signs cert.pem for this IP.
+const secure = fs.existsSync(path.join(TLS, 'key.pem'))
+  ? https.createServer({ key: fs.readFileSync(path.join(TLS, 'key.pem')), cert: fs.readFileSync(path.join(TLS, 'cert.pem')) }, app)
+  : null;
+const sockets = [server, secure].filter(Boolean).map(s => new WebSocketServer({ server: s }));
+const clients = () => sockets.flatMap(w => [...w.clients]);
 
 const logs = [];
 function log(msg) {
@@ -33,7 +44,7 @@ function log(msg) {
 }
 function broadcast(obj) {
   const s = JSON.stringify(obj);
-  for (const c of wss.clients) if (c.readyState === 1) c.send(s);
+  for (const c of clients()) if (c.readyState === 1) c.send(s);
 }
 
 const found = new Map();   // ip -> { ip, sku, device, at }
@@ -55,15 +66,16 @@ const assistant = createAssistant({ engine, llama, log, onChange: sendAi });
 llama.warm();
 
 // Live colours to the phone, 5x/s, only while someone's watching and it's on.
-setInterval(() => { if (wss.clients.size && engine.running) broadcast({ type: 'preview', data: engine.preview() }); }, 200);
+setInterval(() => { if (clients().length && engine.running) broadcast({ type: 'preview', data: engine.preview() }); }, 200);
 
-wss.on('connection', (ws) => {
+const onConnect = (ws) => {
   ws.send(JSON.stringify({ type: 'status', data: engine.status() }));
   ws.send(JSON.stringify({ type: 'found', data: [...found.values()] }));
   ws.send(JSON.stringify({ type: 'logs', data: logs }));
   ws.send(JSON.stringify({ type: 'ai', data: aiState() }));
   ws.send(JSON.stringify({ type: 'cloud', data: cloud.status() }));
-});
+};
+for (const w of sockets) w.on('connection', onConnect);
 
 const route = (fn) => async (req, res) => {
   try { res.json({ ok: true, status: await fn(req.body || {}, req) }); }
@@ -117,6 +129,14 @@ app.post('/api/ask', async (req, res) => {
 });
 app.get('/api/ask', (req, res) => res.json({ ok: true, ai: aiState() }));
 
+// The CA certificate (public half only) for the tablet to trust.
+app.get('/ca.crt', (req, res) => {
+  const f = path.join(TLS, 'ca.crt');
+  if (!fs.existsSync(f)) return res.status(404).send('No certificate set up');
+  res.type('application/x-x509-ca-cert').attachment('christmas-lights-ca.crt').send(fs.readFileSync(f));
+});
+
 server.listen(PORT, () => log(`christmas-lights on http://0.0.0.0:${PORT}`));
+if (secure) secure.listen(HTTPS_PORT, () => log(`christmas-lights on https://0.0.0.0:${HTTPS_PORT}`));
 
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { govee.close(); process.exit(0); });

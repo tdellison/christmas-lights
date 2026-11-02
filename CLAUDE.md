@@ -35,6 +35,9 @@ Govee LAN, ptReal and queue rules apply.
 
 Rules:
 - Never send faster than the tick. Never queue a backlog of effect frames.
+- HTTPS twin on 3101 from `tls/` (git-ignored local CA `ca.crt`/`ca.key` +
+  `cert.pem` for 192.168.1.118), for installing as an Android app; both
+  ports share the WebSockets. `/ca.crt` serves the CA's public cert.
 - Port 3100. Govee listen port 4002 clashes with any other Govee LAN
   app, so never run two at once.
 - Fresh installs start with 6 two-light pair slots (12 lights) and no IPs;
