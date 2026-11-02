@@ -1,0 +1,59 @@
+# ESP32 + solid-state relay board for plain C9 / string lights.
+#
+# Each relay channel switches one group of strings (plug as many strands into
+# a channel as its rating allows). christmas-lights turns channels on and off
+# over Wi-Fi (ESPHome's REST API) to make chases, twinkles and beat flashes.
+#
+# Wiring (8-channel SSR board):
+#   ESP32 GND -> board DC-  ·  board DC+ -> 5 V supply  ·  CH1..CH8 -> pins below
+#   The 120 V side goes through the SSRs only; the ESP32 never touches it.
+#   SSRs switch AC only, and are rated per channel (often 2 A): check yours.
+#
+# 1. Fill in deploy/secrets.yaml (copy secrets.example.yaml).
+# 2. Plug the ESP32 into the server by USB:  esphome run deploy/esp32-relays.yaml
+# 3. In the app: Setup -> + Add C9 relay board, type the ESP32's IP, Save, Test.
+#
+# If a channel is ON when the app says OFF, your board is "low level trigger":
+# set inverted: true on every pin below and flash again.
+# Keep the names relay_1, relay_2, ... : the app addresses them by name.
+# More than 8 channels: copy a block with the next name and a free pin
+# (good spare pins: 26, 27, 32, 33, 13, 14).
+
+esphome:
+  name: c9-relays
+  friendly_name: C9 relays
+
+esp32:
+  board: esp32dev          # change to your board
+  framework:
+    type: arduino
+
+logger:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "C9 relays setup"
+    password: !secret fallback_password
+
+captive_portal:
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# REST API the app uses: POST /switch/relay_1/turn_on
+web_server:
+  port: 80
+
+# Everything off at power-up; the app takes over from there.
+switch:
+  - { platform: gpio, id: relay_1, name: "relay_1", pin: { number: GPIO16, inverted: false }, restore_mode: ALWAYS_OFF }
+  - { platform: gpio, id: relay_2, name: "relay_2", pin: { number: GPIO17, inverted: false }, restore_mode: ALWAYS_OFF }
+  - { platform: gpio, id: relay_3, name: "relay_3", pin: { number: GPIO18, inverted: false }, restore_mode: ALWAYS_OFF }
+  - { platform: gpio, id: relay_4, name: "relay_4", pin: { number: GPIO19, inverted: false }, restore_mode: ALWAYS_OFF }
+  - { platform: gpio, id: relay_5, name: "relay_5", pin: { number: GPIO21, inverted: false }, restore_mode: ALWAYS_OFF }
+  - { platform: gpio, id: relay_6, name: "relay_6", pin: { number: GPIO22, inverted: false }, restore_mode: ALWAYS_OFF }
+  - { platform: gpio, id: relay_7, name: "relay_7", pin: { number: GPIO23, inverted: false }, restore_mode: ALWAYS_OFF }
+  - { platform: gpio, id: relay_8, name: "relay_8", pin: { number: GPIO25, inverted: false }, restore_mode: ALWAYS_OFF }

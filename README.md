@@ -73,6 +73,24 @@ Bluetooth lights update about 3-4 times a second (BLE drops commands if
 spammed), so fast chases look steppier on them than on the Govee lights.
 They keep running the app's effects while a Govee cloud scene plays.
 
+## C9 strings on relays
+
+Plain C9 and string lights are switched by an ESP32 with a solid-state relay
+board (8 channels or more). Each channel is one group of strings: plug as
+many strands into it as the channel's rating allows (common SSR boards: 2 A,
+about 200 W; LED C9 strands draw roughly 0.1-0.2 A each).
+
+1. Fill in `deploy/secrets.yaml`, then with the ESP32 on USB:
+   `esphome run deploy/esp32-relays.yaml`. Wiring notes are at the top of it.
+2. App: **Setup → + Add C9 relay board**, type the ESP32's IP, pick its zone,
+   Save, Test. Each channel shows up as a light (C9 1, C9 2, ...).
+3. Lights tab: pick a channel and set its **C9 string colour** so the
+   preview looks like the real strings.
+
+Strings can only be on or off, so effects become on/off patterns: Chase and
+Alternate step across the channels, Twinkle/Sparkle/Snowfall pop strings on,
+Breathe and Fade blink slowly, and Music Pulse flashes on the beat.
+
 ## Govee scenes and DIYs
 
 **Setup → Govee account**: paste the API key from the Govee app (Profile →

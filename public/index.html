@@ -200,6 +200,7 @@
   .slot .state.empty { color: #8f97b6; }
   .badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #2a3354; color: var(--dim); white-space: nowrap; }
   .badge.bt { background: rgba(63,160,255,.18); color: #9ccfff; }
+  .badge.c9 { background: rgba(246,197,91,.18); color: var(--gold); }
   .badge.ok { background: rgba(47,179,92,.18); color: #8ff0ae; }
   #snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
   header, .stage, main, nav, .toast { position: relative; }
@@ -423,6 +424,8 @@
     <div class="card" id="editor">
       <h2 id="edTitle">Edit</h2>
       <div class="row"><div class="grow"><label class="lbl">Effect</label><select id="edEffect"></select><p class="note" id="edDesc"></p></div></div>
+      <div class="row" id="edStringRow" style="display:none"><div class="grow"><label class="lbl">C9 string colour <span>preview only</span></label>
+        <div class="swatches"><input type="color" id="edString"><span class="note" style="margin:0">C9 strings switch on and off: effects decide when, this sets how they look on screen.</span></div></div></div>
       <div class="row"><div class="grow"><label class="lbl">Palette</label><div class="chips" id="edPalettes"></div></div></div>
       <div class="row"><div class="grow"><label class="lbl">Colours (first = main colour)</label><div class="swatches" id="edColors"></div></div></div>
       <div class="row"><div class="grow"><label class="lbl">Brightness <b id="edBriVal"></b></label><input id="edBri" type="range" min="0" max="100"></div></div>
@@ -479,8 +482,8 @@
       <h2>Light pairs</h2>
       <p class="note" style="margin-top:0">Each pair is one Govee controller: one IP, two lights you control separately. Type the IP, or scan and pick a slot. Empty slots still show in the preview.</p>
       <div id="devices"></div>
-      <div class="row" style="margin-top:10px"><button class="btn" id="addPair">+ Add a pair</button><button class="btn" id="addBle">+ Add Bluetooth pair</button></div>
-      <p class="note">Bluetooth pairs are BRMesh-app lights, sent through an ESP32 bridge (see <code>deploy/esp32-brmesh.yaml</code>). Type the ESP32's IP and its light names.</p>
+      <div class="row" style="margin-top:10px"><button class="btn" id="addPair">+ Add a pair</button><button class="btn" id="addBle">+ Add Bluetooth pair</button><button class="btn" id="addRelay">+ Add C9 relay board</button></div>
+      <p class="note">Bluetooth pairs are BRMesh-app lights, sent through an ESP32 bridge (<code>deploy/esp32-brmesh.yaml</code>). C9 relay boards switch plain strings on and off through an ESP32 (<code>deploy/esp32-relays.yaml</code>). For both, type the ESP32's IP and its names.</p>
     </div>
 
     <div class="card">
@@ -602,7 +605,7 @@ function render() {
   if (zoneSel !== 'all' && !S.groups.some(g => g.id === zoneSel) && !S.zones.some(z => z.id === zoneSel)) zoneSel = 'all';
   const num = new Map(S.lights.map((l, i) => [l.id, i + 1]));
   const bulb = (l) => `
-    <button class="bulb ${S.running ? '' : 'idle'} ${l.on ? '' : 'off'} ${noIp.has(l.device) ? 'noip' : ''} ${selected.has(l.id) ? 'sel' : ''}" style="--idle:${esc(l.palette[0])}" data-bulb="${esc(l.id)}" data-live="${esc(l.id)}" title="${esc(l.name)}">
+    <button class="bulb ${S.running ? '' : 'idle'} ${l.on ? '' : 'off'} ${noIp.has(l.device) ? 'noip' : ''} ${selected.has(l.id) ? 'sel' : ''}" style="--idle:${esc(l.relay ? l.string || '#ffb46b' : l.palette[0])}" data-bulb="${esc(l.id)}" data-live="${esc(l.id)}" title="${esc(l.name)}">
       <span class="glow"></span><span class="cap"></span><span class="glass"></span>
       <span class="tag"><b>${num.get(l.id)}</b>${esc(l.name)}</span>
     </button>`;
@@ -676,6 +679,9 @@ function renderEditor() {
   $('#edColors').innerHTML = L.palette.map((c, i) => `<input type="color" value="${c}" data-ci="${i}">`).join('')
     + (L.palette.length < 6 ? '<button class="btn small" id="addColor">+</button>' : '')
     + (L.palette.length > 1 ? '<button class="btn small" id="rmColor">−</button>' : '');
+  const relays = ids.map(id => S.lights.find(l => l.id === id)).filter(l => l && l.relay);
+  $('#edStringRow').style.display = relays.length ? 'flex' : 'none';
+  if (relays.length) $('#edString').value = relays[0].string || '#ffb46b';
   $('#edBri').value = L.bri; $('#edBriVal').textContent = L.bri + '%';
   $('#edSpeed').value = fromSpeed(L.speed); $('#edSpeedVal').textContent = L.speed + '×';
 }
@@ -724,7 +730,7 @@ function renderDevices() {
   if (!focused) {
     box.innerHTML = S.devices.length ? S.devices.map(d => {
       const lights = S.lights.filter(l => l.device === d.id);
-      const what = d.kind === 'brmesh' ? 'ESP32 bridge' : (d.sku || 'Govee');
+      const what = d.kind === 'brmesh' ? 'ESP32 Bluetooth bridge' : d.kind === 'relay' ? `ESP32 relays · ${d.ch.length} channels` : (d.sku || 'Govee');
       const state = !d.ip ? '<span class="state empty">No IP yet · preview only</span>'
         : d.lastSeen ? `<span class="state ok">${esc(what)} · ${ago(d.lastSeen)}</span>`
         : `<span class="state">${esc(what)} · ${ago(d.lastSeen)}</span>`;
@@ -733,11 +739,11 @@ function renderDevices() {
         <div class="pairdots">${lights.map(l => `<div class="dot" data-live="${esc(l.id)}" title="${esc(l.name)}"></div>`).join('')}</div>
         <div class="head"><input type="text" value="${esc(d.name)}" data-dname aria-label="Pair name">
           <select data-dzone aria-label="Zone">${S.zones.map(z => `<option value="${esc(z.id)}" ${z.id === d.zone ? 'selected' : ''}>${esc(z.name)}</option>`).join('')}</select>
-          ${d.kind === 'brmesh' ? '<span class="badge bt">BT</span>' : ''}<span class="badge ${d.ip ? 'ok' : ''}">${d.ip ? 'set' : 'empty'}</span></div>
+          ${d.kind === 'brmesh' ? '<span class="badge bt">BT</span>' : d.kind === 'relay' ? '<span class="badge c9">C9</span>' : ''}<span class="badge ${d.ip ? 'ok' : ''}">${d.ip ? 'set' : 'empty'}</span></div>
         <div class="ipline">
-          <input type="text" inputmode="decimal" placeholder="${d.kind === 'brmesh' ? 'ESP32 IP' : 'IP, e.g. 192.168.1.50'}" value="${esc(d.ip)}" data-dip aria-label="IP">
-          ${d.kind === 'brmesh' ? `<input type="text" value="${esc((d.ble || []).join(', '))}" data-dble aria-label="ESPHome light names" title="ESPHome light names" style="flex:1 1 150px;min-width:0;padding:8px 10px">` : ''}
-          ${d.kind === 'brmesh' ? '' : `<select data-dsegs aria-label="Lights on it">${[1,2,3,4].map(k => `<option value="${k}" ${k === d.segments ? 'selected' : ''}>${k === 2 ? '2 lights' : k === 1 ? '1 light' : k + ' lights'}</option>`).join('')}</select>`}
+          <input type="text" inputmode="decimal" placeholder="${d.kind === 'brmesh' || d.kind === 'relay' ? 'ESP32 IP' : 'IP, e.g. 192.168.1.50'}" value="${esc(d.ip)}" data-dip aria-label="IP">
+          ${d.kind === 'brmesh' || d.kind === 'relay' ? `<input type="text" value="${esc((d.kind === 'relay' ? d.ch : d.ble || []).join(', '))}" data-dnames aria-label="ESPHome names" title="${d.kind === 'relay' ? 'Relay channel names (one string group each)' : 'ESPHome light names'}" style="flex:1 1 150px;min-width:0;padding:8px 10px">` : ''}
+          ${d.kind === 'brmesh' || d.kind === 'relay' ? '' : `<select data-dsegs aria-label="Lights on it">${[1,2,3,4].map(k => `<option value="${k}" ${k === d.segments ? 'selected' : ''}>${k === 2 ? '2 lights' : k === 1 ? '1 light' : k + ' lights'}</option>`).join('')}</select>`}
           <button class="btn small" data-dsave>Save</button>
           <button class="btn small" data-dprobe ${d.ip ? '' : 'disabled'}>Test</button>
           <button class="btn small" data-ddel aria-label="Remove pair">✕</button>
@@ -838,6 +844,7 @@ $('#edBri').oninput = (e) => { editing = true; $('#edBriVal').textContent = e.ta
 const sendSpeed = throttle((v) => patchSel({ speed: v }));
 $('#edSpeed').oninput = (e) => { editing = true; const s = toSpeed(+e.target.value); $('#edSpeedVal').textContent = s + '×'; sendSpeed(s); };
 ['#edBri', '#edSpeed'].forEach(s => $(s).addEventListener('change', () => { editing = false; }));
+$('#edString').onchange = (e) => { const ids = targets().filter(id => (S.lights.find(l => l.id === id) || {}).relay); if (ids.length) api('/api/lights', { ids, string: e.target.value }); };
 $('#edOn').onclick = () => patchSel({ on: true });
 $('#edOff').onclick = () => patchSel({ on: false });
 $('#edIdent').onclick = () => { const ids = targets(); if (ids.length !== 1) return toast('Tick just one light to find it'); api('/api/lights/identify', { id: ids[0] }); };
@@ -884,6 +891,7 @@ $('#found').onclick = (e) => {
 };
 $('#addPair').onclick = () => api('/api/devices', { segments: 2 });
 $('#addBle').onclick = () => api('/api/devices', { segments: 2, kind: 'brmesh' });
+$('#addRelay').onclick = () => api('/api/devices', { segments: 8, kind: 'relay', zone: S.zones.some(z => z.id === zoneSel) ? zoneSel : undefined });
 $('#devices').addEventListener('change', (e) => { if (e.target.matches('[data-dzone]')) { const id = e.target.closest('[data-dev]').dataset.dev; e.target.blur(); api(`/api/devices/${id}`, { zone: e.target.value }); } });
 $('#devices').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('input')) { const box = e.target.closest('[data-dev]'); box.querySelector('[data-dsave]').click(); } });
 $('#devices').addEventListener('focusout', () => setTimeout(() => { if (!$('#devices').contains(document.activeElement)) renderDevices(); }, 0));
@@ -892,11 +900,11 @@ $('#devices').addEventListener('click', async (e) => {
   const id = box.dataset.dev;
   if (e.target.matches('[data-dsave]')) {
     e.target.blur();
-    const ble = box.querySelector('[data-dble]');
-    api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, ...(ble ? { ble: ble.value } : { segments: +box.querySelector('[data-dsegs]').value }) });
+    const names = box.querySelector('[data-dnames]'), kind = (S.devices.find(d => d.id === id) || {}).kind;
+    api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, ...(names ? { [kind === 'relay' ? 'ch' : 'ble']: names.value } : { segments: +box.querySelector('[data-dsegs]').value }) });
   }
   if (e.target.matches('[data-ddel]') && confirm('Remove this pair and its lights?')) api(`/api/devices/${id}`, null, 'DELETE');
-  if (e.target.matches('[data-dprobe]')) { e.target.textContent = '…'; const r = await api(`/api/devices/${id}/probe`); e.target.textContent = 'Test'; if (r) toast(r.status.brmesh ? (r.status.ok ? 'ESP32 answered for every light' : `ESP32: ${r.status.error}`) : r.status.ok ? `Answered: ${r.status.status.onOff ? 'on' : 'off'}, brightness ${r.status.status.brightness}` : 'No answer — check the IP and LAN Control'); }
+  if (e.target.matches('[data-dprobe]')) { e.target.textContent = '…'; const r = await api(`/api/devices/${id}/probe`); e.target.textContent = 'Test'; if (r) toast(r.status.esp ? (r.status.ok ? 'ESP32 answered for every channel' : `ESP32: ${r.status.error}`) : r.status.ok ? `Answered: ${r.status.status.onOff ? 'on' : 'off'}, brightness ${r.status.status.brightness}` : 'No answer — check the IP and LAN Control'); }
 });
 $('#order').addEventListener('click', (e) => {
   const o = S.lights.map(l => l.id);
