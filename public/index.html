@@ -199,6 +199,7 @@
   .slot .state.ok { color: #7fe39f; }
   .slot .state.empty { color: #8f97b6; }
   .badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #2a3354; color: var(--dim); white-space: nowrap; }
+  .badge.bt { background: rgba(63,160,255,.18); color: #9ccfff; }
   .badge.ok { background: rgba(47,179,92,.18); color: #8ff0ae; }
   #snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
   header, .stage, main, nav, .toast { position: relative; }
@@ -441,7 +442,8 @@
       <h2>Light pairs</h2>
       <p class="note" style="margin-top:0">Each pair is one Govee controller: one IP, two lights you control separately. Type the IP, or scan and pick a slot. Empty slots still show in the preview.</p>
       <div id="devices"></div>
-      <div class="row" style="margin-top:10px"><button class="btn" id="addPair">+ Add a pair</button></div>
+      <div class="row" style="margin-top:10px"><button class="btn" id="addPair">+ Add a pair</button><button class="btn" id="addBle">+ Add Bluetooth pair</button></div>
+      <p class="note">Bluetooth pairs are BRMesh-app lights, sent through an ESP32 bridge (see <code>deploy/esp32-brmesh.yaml</code>). Type the ESP32's IP and its light names.</p>
     </div>
 
     <div class="card">
@@ -643,17 +645,19 @@ function renderDevices() {
   if (!focused) {
     box.innerHTML = S.devices.length ? S.devices.map(d => {
       const lights = S.lights.filter(l => l.device === d.id);
+      const what = d.kind === 'brmesh' ? 'ESP32 bridge' : (d.sku || 'Govee');
       const state = !d.ip ? '<span class="state empty">No IP yet · preview only</span>'
-        : d.lastSeen ? `<span class="state ok">${esc(d.sku || 'Govee')} · ${ago(d.lastSeen)}</span>`
-        : `<span class="state">${esc(d.sku || 'Govee')} · ${ago(d.lastSeen)}</span>`;
+        : d.lastSeen ? `<span class="state ok">${esc(what)} · ${ago(d.lastSeen)}</span>`
+        : `<span class="state">${esc(what)} · ${ago(d.lastSeen)}</span>`;
       return `
       <div class="slot" data-dev="${esc(d.id)}">
         <div class="pairdots">${lights.map(l => `<div class="dot" data-live="${esc(l.id)}" title="${esc(l.name)}"></div>`).join('')}</div>
         <div class="head"><input type="text" value="${esc(d.name)}" data-dname aria-label="Pair name">
-          <span class="badge ${d.ip ? 'ok' : ''}">${d.ip ? 'set' : 'empty'}</span></div>
+          ${d.kind === 'brmesh' ? '<span class="badge bt">Bluetooth</span>' : ''}<span class="badge ${d.ip ? 'ok' : ''}">${d.ip ? 'set' : 'empty'}</span></div>
         <div class="ipline">
-          <input type="text" inputmode="decimal" placeholder="IP, e.g. 192.168.1.50" value="${esc(d.ip)}" data-dip aria-label="IP">
-          <select data-dsegs aria-label="Lights on it">${[1,2,3,4].map(k => `<option value="${k}" ${k === d.segments ? 'selected' : ''}>${k === 2 ? '2 lights' : k === 1 ? '1 light' : k + ' lights'}</option>`).join('')}</select>
+          <input type="text" inputmode="decimal" placeholder="${d.kind === 'brmesh' ? 'ESP32 IP' : 'IP, e.g. 192.168.1.50'}" value="${esc(d.ip)}" data-dip aria-label="IP">
+          ${d.kind === 'brmesh' ? `<input type="text" value="${esc((d.ble || []).join(', '))}" data-dble aria-label="ESPHome light names" title="ESPHome light names" style="flex:1 1 150px;min-width:0;padding:8px 10px">` : ''}
+          ${d.kind === 'brmesh' ? '' : `<select data-dsegs aria-label="Lights on it">${[1,2,3,4].map(k => `<option value="${k}" ${k === d.segments ? 'selected' : ''}>${k === 2 ? '2 lights' : k === 1 ? '1 light' : k + ' lights'}</option>`).join('')}</select>`}
           <button class="btn small" data-dsave>Save</button>
           <button class="btn small" data-dprobe ${d.ip ? '' : 'disabled'}>Test</button>
           <button class="btn small" data-ddel aria-label="Remove pair">✕</button>
@@ -782,14 +786,19 @@ $('#found').onclick = (e) => {
   else api(`/api/devices/${slot}`, { ip, sku });
 };
 $('#addPair').onclick = () => api('/api/devices', { segments: 2 });
+$('#addBle').onclick = () => api('/api/devices', { segments: 2, kind: 'brmesh' });
 $('#devices').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('input')) { const box = e.target.closest('[data-dev]'); box.querySelector('[data-dsave]').click(); } });
 $('#devices').addEventListener('focusout', () => setTimeout(() => { if (!$('#devices').contains(document.activeElement)) renderDevices(); }, 0));
 $('#devices').addEventListener('click', async (e) => {
   const box = e.target.closest('[data-dev]'); if (!box) return;
   const id = box.dataset.dev;
-  if (e.target.matches('[data-dsave]')) { e.target.blur(); api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, segments: +box.querySelector('[data-dsegs]').value }); }
+  if (e.target.matches('[data-dsave]')) {
+    e.target.blur();
+    const ble = box.querySelector('[data-dble]');
+    api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, ...(ble ? { ble: ble.value } : { segments: +box.querySelector('[data-dsegs]').value }) });
+  }
   if (e.target.matches('[data-ddel]') && confirm('Remove this pair and its lights?')) api(`/api/devices/${id}`, null, 'DELETE');
-  if (e.target.matches('[data-dprobe]')) { e.target.textContent = '…'; const r = await api(`/api/devices/${id}/probe`); e.target.textContent = 'Test'; if (r) toast(r.status.ok ? `Answered: ${r.status.status.onOff ? 'on' : 'off'}, brightness ${r.status.status.brightness}` : 'No answer — check the IP and LAN Control'); }
+  if (e.target.matches('[data-dprobe]')) { e.target.textContent = '…'; const r = await api(`/api/devices/${id}/probe`); e.target.textContent = 'Test'; if (r) toast(r.status.brmesh ? (r.status.ok ? 'ESP32 answered for every light' : `ESP32: ${r.status.error}`) : r.status.ok ? `Answered: ${r.status.status.onOff ? 'on' : 'off'}, brightness ${r.status.status.brightness}` : 'No answer — check the IP and LAN Control'); }
 });
 $('#order').addEventListener('click', (e) => {
   const o = S.lights.map(l => l.id);

@@ -37,6 +37,28 @@ Auto-start: see `deploy/christmas-lights.service`.
   OFF holds until the next on time.
 - If the server restarts while the lights were on, they come back on.
 
+## Bluetooth lights (BRMesh app)
+
+BRMesh lights only talk Bluetooth, so an ESP32 does the talking. It runs
+ESPHome with the [esphome-fastcon](https://github.com/dennispg/esphome-fastcon)
+component and the app sends it colours over Wi-Fi.
+
+1. **Mesh key**: set the lights up in the BRMesh app on an **Android** phone,
+   plug the phone into the server, turn on USB debugging, and run
+   (then toggle a light in the app):
+   `adb logcat | grep -m 1 -o 'jyq_helper: .* payload:.\{24\},[[:space:]]*key:[[:space:]]*.\{8\}' | awk '{print $NF}'`
+   It prints 8 hex characters.
+2. **Light ids**: usually 1 and 2 for the first two lights added in the app.
+   The same logcat output shows the id when you toggle each light.
+3. Copy `deploy/secrets.example.yaml` to `deploy/secrets.yaml`, fill in Wi-Fi
+   and the mesh key, set the `light_id`s in `deploy/esp32-brmesh.yaml`.
+4. Flash: plug the ESP32 into the server, `esphome run deploy/esp32-brmesh.yaml`.
+5. App: **Setup → + Add Bluetooth pair**, type the ESP32's IP, Save, Test.
+
+Bluetooth lights update about 3-4 times a second (BLE drops commands if
+spammed), so fast chases look steppier on them than on the Govee lights.
+They keep running the app's effects while a Govee cloud scene plays.
+
 ## Govee scenes and DIYs
 
 **Setup → Govee account**: paste the API key from the Govee app (Profile →

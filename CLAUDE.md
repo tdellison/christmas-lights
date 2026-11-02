@@ -20,6 +20,9 @@ Govee LAN, ptReal and queue rules apply.
 - `lib/goveeCloud.js`: Govee Platform API (cloud) for Govee scenes + app
   DIYs, offered to the engine as `govee:<kind>:<name>` looks. While one plays
   the engine sends nothing. Key in `secrets.json`, never in git or the UI.
+- `lib/brmesh.js`: BRMesh BLE lights via an ESP32 running ESPHome + fastcon
+  (`deploy/esp32-brmesh.yaml`), over ESPHome REST. Device `kind: brmesh`,
+  `ip` = ESP32, `ble` = ESPHome light names. Max 1 cmd/light/250 ms, none in flight.
 - `public/index.html`: single-file phone UI over a WebSocket.
 
 Rules:
