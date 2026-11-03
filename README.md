@@ -122,7 +122,7 @@ ignores it) and never sent to the browser.
 
 ## Ask the elves
 
-The **Elves** tab is a chat that runs on local Llama 3.1 8B (nothing leaves
+The **Elves** tab is a chat that runs on local Qwen 3 8B (nothing leaves
 the house). The box on the Lights tab sends to it too.
 
 - **Commands**: "candy cane out front, warm twinkle out back", "slower",
