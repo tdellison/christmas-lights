@@ -213,6 +213,13 @@
   .gchips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 260px; overflow-y: auto; margin-top: 8px; }
   .gchips button { font-size: 13px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); }
   .gchips button.on { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+  .lgroup { margin: 14px 0 8px; font: 700 19px "Mountains of Christmas", Georgia, serif; color: var(--warm); display: flex; align-items: baseline; gap: 8px; }
+  .lgroup small { font: 600 12px system-ui, sans-serif; color: #9fb0d4; }
+  details.lmore > summary { list-style: none; cursor: pointer; }
+  details.lmore > summary::-webkit-details-marker { display: none; }
+  details.lmore > summary .lgroup::after { content: "▸ show"; font: 600 12px system-ui, sans-serif; color: var(--gold); margin-left: auto; }
+  details.lmore[open] > summary .lgroup::after { content: "▾ hide"; }
+  #plWrap summary { color: var(--gold); }
   .ask form { display: flex; gap: 8px; }
   .ask input { flex: 1; min-width: 0; }
   .ask .ideas { display: flex; gap: 6px; overflow-x: auto; margin-top: 10px; padding-bottom: 2px; scrollbar-width: none; }
@@ -443,7 +450,8 @@
   <section id="tab-looks">
     <div class="card">
       <h2 id="looksTitle">Looks</h2>
-      <div class="looks" id="looks"></div>
+      <input id="lookFind" type="search" placeholder="Find a show (e.g. sleigh, candy, grinch)" autocomplete="off" style="margin-bottom:10px">
+      <div id="looks"></div>
       <div class="row" style="margin-top:12px">
         <input class="grow" id="lookName" type="text" placeholder="Name this look">
         <button class="btn primary" id="lookSave">Save current</button>
@@ -458,7 +466,7 @@
       </div>
       <div class="zrot" id="rotZones"></div>
       <p class="note" id="rotNext"></p>
-      <div id="playlist"></div>
+      <details id="plWrap"><summary class="note" id="plSum" style="cursor:pointer;margin:6px 0">Pick looks for auto-rotate</summary><div id="playlist"></div></details>
       <div class="row" style="margin-top:10px"><button class="btn" id="rotNextBtn">Next look now</button></div>
     </div>
 
@@ -502,7 +510,7 @@
       </div>
       <p class="note" id="gState"></p>
       <div id="gMore" style="display:none">
-        <div class="row" style="margin-top:6px"><div class="grow note" style="margin:0">Tap scenes to show them in Looks. DIYs always show.</div><button class="btn small" id="gRefresh">Refresh</button></div>
+        <div class="row" style="margin-top:6px"><div class="grow note" style="margin:0">All scenes and DIYs are in Looks. Tap a scene to move it into the "Christmas &amp; winter" group.</div><button class="btn small" id="gRefresh">Refresh</button></div>
         <div class="gchips" id="gScenes"></div>
       </div>
     </div>
@@ -541,6 +549,7 @@
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let S = null, found = [], logs = [], AI = null, asking = null, G = null;
+const lookOpen = {};   // 'More Govee scenes' opened by hand
 let zoneSel = 'all';   // 'all' | group id ('front') | zone id
 try { zoneSel = localStorage.getItem('zoneSel') || 'all'; } catch (_) {}
 const zonesOf = (sel) => !S ? [] : sel === 'all' ? S.zones.map(z => z.id) : (S.groups.find(g => g.id === sel) || {}).zones || (S.zones.some(z => z.id === sel) ? [sel] : S.zones.map(z => z.id));
@@ -692,11 +701,27 @@ function renderLooks() {
     if (l.builtin) return (S.palettes.find(p => p.id === l.palette) || { colors: [] }).colors;
     return [];
   };
-  $('#looks').innerHTML = S.looks.map(l => `
+  const card = (l) => `
     <button class="look ${l.govee ? 'gv' : ''} ${l.id === selLook() ? 'on' : ''}" data-look="${esc(l.id)}">${esc(l.name)}
       <small>${l.govee === 'diy' ? 'Your Govee DIY' : l.govee ? 'Govee scene' : l.builtin ? esc(effName(l.effect)) : 'Saved look'}</small>
       <div class="bar">${l.govee ? '<i></i>' : (palOf(l).length ? palOf(l) : ['#555']).map(c => `<i style="background:${c};color:${c}"></i>`).join('')}</div>
-    </button>`).join('');
+    </button>`;
+  // Grouped so ~100 shows stay findable; the search box filters every group.
+  const q = ($('#lookFind').value || '').trim().toLowerCase();
+  const match = (l) => !q || l.name.toLowerCase().includes(q);
+  const groups = [
+    { id: 'app', name: 'Our looks', list: S.looks.filter(l => !l.govee) },
+    { id: 'diy', name: 'Your Govee DIYs', list: S.looks.filter(l => l.group === 'diy') },
+    { id: 'xmas', name: 'Govee Christmas & winter', list: S.looks.filter(l => l.group === 'xmas') },
+    { id: 'scene', name: 'More Govee scenes', list: S.looks.filter(l => l.group === 'scene'), more: true },
+  ].map(g => ({ ...g, list: g.list.filter(match) })).filter(g => g.list.length);
+  const cur = selLook();
+  $('#looks').innerHTML = groups.map(g => {
+    const head = `<div class="lgroup">${esc(g.name)} <small>${g.list.length}</small></div>`;
+    const body = `<div class="looks">${g.list.map(card).join('')}</div>`;
+    const open = q || g.list.some(l => l.id === cur) || lookOpen[g.id];
+    return g.more ? `<details class="lmore" data-lg="${g.id}" ${open ? 'open' : ''}><summary>${head}</summary>${body}</details>` : head + body;
+  }).join('') || '<div class="empty">No show matches that.</div>';
   $('#looksTitle').textContent = zoneSel === 'all' ? 'Looks' : `Looks · ${zoneName(zoneSel)}`;
   const rz = S.rotate.zones || S.zones.map(z => z.id);
   $('#rotZones').innerHTML = '<span class="note" style="margin:0;align-self:center">Rotate in:</span>' + S.zones.map(z => `<button class="${rz.includes(z.id) ? 'on' : ''}" data-rz="${esc(z.id)}">${esc(z.name)}</button>`).join('');
@@ -709,6 +734,7 @@ function renderLooks() {
   if (document.activeElement !== $('#rotMin')) $('#rotMin').value = S.rotate.minutes;
   $('#rotOn').checked = S.rotate.enabled;
   $('#rotNext').textContent = S.rotate.enabled && S.rotate.nextAt ? `Next change at ${new Date(S.rotate.nextAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : (S.rotate.enabled && !S.running ? 'Starts when the lights are on.' : '');
+  $('#plSum').textContent = `Pick looks for auto-rotate (${S.rotate.list.filter(id => S.looks.some(l => l.id === id)).length} picked)`;
   $('#playlist').innerHTML = S.looks.map(l => `
     <div class="pl"><input type="checkbox" class="check" data-pl="${esc(l.id)}" ${S.rotate.list.includes(l.id) ? 'checked' : ''}>
       <div class="grow">${esc(l.name)}</div>
@@ -850,6 +876,8 @@ $('#edOn').onclick = () => patchSel({ on: true });
 $('#edOff').onclick = () => patchSel({ on: false });
 $('#edIdent').onclick = () => { const ids = targets(); if (ids.length !== 1) return toast('Tick just one light to find it'); api('/api/lights/identify', { id: ids[0] }); };
 
+$('#lookFind').addEventListener('input', () => renderLooks());
+$('#looks').addEventListener('toggle', (e) => { if (e.target.dataset && e.target.dataset.lg) lookOpen[e.target.dataset.lg] = e.target.open; }, true);
 $('#looks').onclick = (e) => { const b = e.target.closest('[data-look]'); if (b) api('/api/looks/apply', { id: b.dataset.look, zone: zoneSel === 'all' ? undefined : zoneSel }); };
 $('#zchips').onclick = (e) => { const b = e.target.closest('[data-zsel]'); if (b) pickZone(b.dataset.zsel); };
 $('#strip').addEventListener('click', (e) => { const c = e.target.closest('[data-zcap]'); if (c) { e.stopPropagation(); pickZone(c.dataset.zcap); } }, true);

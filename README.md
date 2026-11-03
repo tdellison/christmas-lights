@@ -115,7 +115,8 @@ About Us → Apply for API Key). Govee's built-in scenes (Christmas-A, Sled,
 ...) and any DIYs you save from the app's Share Space then show up as looks,
 work in auto-rotate, and the elves can pick them. They play through Govee's
 cloud and run on the lights themselves; the app stops streaming while one is
-on. Tap scenes in Setup to choose which show in Looks. New DIYs show up
+on. Every scene and DIY is on the Looks tab, grouped (Your Govee DIYs,
+Govee Christmas & winter, More Govee scenes) with a search box. New DIYs show up
 within the hour, or tap Refresh. The key is kept in `secrets.json` (git
 ignores it) and never sent to the browser.
 
