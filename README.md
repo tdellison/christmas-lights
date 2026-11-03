@@ -122,11 +122,19 @@ ignores it) and never sent to the browser.
 
 ## Ask the elves
 
-The box at the top of the Lights tab takes plain English: "something cozy",
-"red and green chase", "snowfall on 7 to 12", "slower", "on at 4:30, off at 11".
-It runs on local Llama 3.1 8B through Ollama, so nothing leaves the house.
-Most requests take 2-6 s on this CPU. "on", "off" and a look's exact name are
-instant. The app starts Ollama itself if it isn't running.
+The **Elves** tab is a chat that runs on local Llama 3.1 8B (nothing leaves
+the house). The box on the Lights tab sends to it too.
+
+- **Commands**: "candy cane out front, warm twinkle out back", "slower",
+  "turn off the backyard", "on at 4:30, off at 11". Follow-ups work ("more
+  red", "now do that out back").
+- **Find shows**: "what snow shows do I have?" lists matches to tap and play.
+  Show names play instantly ("Sleigh Ride", "play santa sleigh").
+- **Design**: "surprise me" or "design an icy blue show called Jack Frost".
+  The elves build it as a saved look while the current show keeps playing,
+  then offer **Play** and **Delete it**. Tweaks right after ("more white",
+  "make the backyard sparkle") change the design, not the yard. Designs take
+  ~10-60 s; commands a few seconds.
 
 ## Effects
 

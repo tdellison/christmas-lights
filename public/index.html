@@ -225,8 +225,15 @@
   .ask .ideas { display: flex; gap: 6px; overflow-x: auto; margin-top: 10px; padding-bottom: 2px; scrollbar-width: none; }
   .ask .ideas::-webkit-scrollbar { display: none; }
   .ask .ideas button { flex: none; font-size: 13px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); color: var(--warm); }
-  .ask .talk { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
-  .ask .talk:empty { display: none; }
+  .ask .talk { margin: 10px 0; display: flex; flex-direction: column; gap: 8px; min-height: 120px; max-height: calc(100vh - 430px); overflow-y: auto; padding: 4px 2px; }
+  .ask .talk:empty::before { content: "Try \"surprise me\" or tap an idea below."; color: var(--dim); font-size: 14px; margin: auto; }
+  .ask .ideas { margin: 0 0 10px; }
+  .msg .acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+  .msg .acts button { font-size: 13px; padding: 5px 11px; border-radius: 999px; border: 1px solid #2b6a4a; background: #0f3626; color: var(--text); }
+  .msg .acts button.go { background: linear-gradient(180deg, #2aa553, #1d8240); border-color: #3cc66a; color: #fff; font-weight: 700; }
+  .askmini form { display: flex; gap: 8px; }
+  .askmini input { flex: 1; min-width: 0; }
+  .askmini { padding: 12px 14px; }
   .msg { max-width: 85%; padding: 8px 12px; border-radius: 14px; font-size: 14px; line-height: 1.35; }
   .msg.you { align-self: flex-end; background: #233463; border-bottom-right-radius: 4px; }
   .msg.elf { align-self: flex-start; background: rgba(47,179,92,.16); border: 1px solid rgba(47,179,92,.35); border-bottom-left-radius: 4px; }
@@ -401,17 +408,11 @@
 <main>
   <!-- LIGHTS -->
   <section id="tab-lights" class="active">
-    <div class="card ask">
-      <h2>Ask the elves <span id="aiState">waking up…</span></h2>
-      <form id="askForm" autocomplete="off">
-        <input id="askText" type="text" placeholder="e.g. candy cane, a bit slower" enterkeyhint="send">
-        <button class="btn primary" id="askBtn">Send</button>
+    <div class="card askmini">
+      <form id="askMini" autocomplete="off">
+        <input id="askMiniText" type="text" placeholder="Ask the elves… (e.g. surprise me)" enterkeyhint="send">
+        <button class="btn primary">Ask</button>
       </form>
-      <div class="ideas" id="ideas">
-        <button>Something cozy</button><button>Candy cane out front, warm twinkle out back</button><button>Red and green chase on front left</button><button>Turn off the backyard</button>
-        <button>Brighter</button><button>Slower</button><button>Change looks every 15 minutes</button><button>Turn on at 4:30, off at 11</button>
-      </div>
-      <div class="talk" id="talk"></div>
     </div>
 
     <div class="card">
@@ -485,6 +486,24 @@
     </div>
   </section>
 
+  <!-- ELVES -->
+  <section id="tab-elves">
+    <div class="card ask">
+      <h2>Ask the elves <span id="aiState">waking up…</span></h2>
+      <p class="note" style="margin-top:0">Tell them what you want, ask what shows you have, or have them design a new show. Designs are built while the current show keeps playing; tap <b>Play</b> when it's ready.</p>
+      <div class="talk" id="talk"></div>
+      <div class="ideas" id="ideas">
+        <button>Surprise me</button><button data-fill="Design a show called ">Design a show called…</button><button>What snow shows do I have?</button>
+        <button>Candy cane out front, warm twinkle out back</button><button>Slower</button><button>Brighter</button><button>Turn off the backyard</button><button>Change looks every 15 minutes</button>
+      </div>
+      <form id="askForm" autocomplete="off">
+        <input id="askText" type="text" placeholder="e.g. design an icy blue show called Jack Frost" enterkeyhint="send">
+        <button class="btn primary" id="askBtn">Send</button>
+      </form>
+      <div class="row" style="margin-top:8px"><span class="grow"></span><button class="btn small" id="askClear">New chat</button></div>
+    </div>
+  </section>
+
   <!-- SETUP -->
   <section id="tab-setup">
     <div class="card">
@@ -541,6 +560,7 @@
 <nav>
   <button data-tab="lights" class="active"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Lights</button>
   <button data-tab="looks"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg>Looks</button>
+  <button data-tab="elves"><svg viewBox="0 0 24 24"><path d="M4 18h16M5 18c1-6 4-11 9-13 1 2 1 4 0 6l3 2-3 1c-1 2-2 3-2 4"/><circle cx="14.5" cy="4.5" r="1.5"/></svg>Elves</button>
   <button data-tab="setup"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Setup</button>
 </nav>
 <div class="toast" id="toast"></div>
@@ -635,7 +655,7 @@ function render() {
   $('#masterVal').textContent = S.master + '%';
   // keep selection valid
   for (const id of [...selected]) if (!S.lights.some(l => l.id === id)) selected.delete(id);
-  renderLights(); renderEditor(); renderLooks(); renderDevices(); renderFound();
+  renderLights(); renderEditor(); renderLooks(); renderDevices(); renderFound(); renderAi();
   if (S.running) paintPreview(live);
 }
 
@@ -818,8 +838,16 @@ function renderAi() {
   st.textContent = AI.busy ? 'thinking…' : AI.ready ? (AI.lastError ? 'had trouble' : 'ready') : AI.lastError ? 'asleep' : 'waking up…';
   st.title = AI.lastError || AI.model || '';
   const talk = $('#talk');
-  talk.innerHTML = AI.history.map(h => `<div class="msg you">${esc(h.text)}</div><div class="msg elf ${h.ok ? '' : 'bad'}">${esc(h.reply)}${h.ms ? `<small>${(h.ms / 1000).toFixed(1)}s</small>` : ''}</div>`).join('')
-    + (asking ? `<div class="msg you">${esc(asking)}</div><div class="msg elf thinking"><span></span><span></span><span></span></div>` : '');
+  const exists = (id) => S && S.looks.some(l => l.id === id);
+  const acts = (h) => {
+    const b = [];
+    if (h.saved && exists(h.saved.id)) b.push(`<button class="go" data-play="${esc(h.saved.id)}">▶ Play "${esc(h.saved.name)}"</button>`, `<button data-dellook="${esc(h.saved.id)}">Delete it</button>`);
+    if (h.shows) b.push(...h.shows.map(x => `<button data-play="${esc(x.id)}">▶ ${esc(x.name)}</button>`));
+    return b.length ? `<div class="acts">${b.join('')}</div>` : '';
+  };
+  const working = asking && /surprise|design|create|invent|new show|new look/i.test(asking) ? 'Designing… this can take a minute or two. The show keeps playing.' : '';
+  talk.innerHTML = AI.history.map(h => `<div class="msg you">${esc(h.text)}</div><div class="msg elf ${h.ok ? '' : 'bad'}">${esc(h.reply)}${acts(h)}${h.ms ? `<small>${(h.ms / 1000).toFixed(1)}s</small>` : ''}</div>`).join('')
+    + (asking ? `<div class="msg you">${esc(asking)}</div><div class="msg elf thinking"><span></span><span></span><span></span>${working ? `<small>${working}</small>` : ''}</div>` : '');
   talk.scrollTop = talk.scrollHeight;
 }
 function renderLog() { const el = $('#log'); el.textContent = logs.slice().reverse().map(l => `${new Date(l.at).toLocaleTimeString()}  ${l.msg}`).join('\n'); }
@@ -966,7 +994,18 @@ async function ask(text) {
   asking = null; $('#askBtn').disabled = false; renderAi();
 }
 $('#askForm').onsubmit = (e) => { e.preventDefault(); ask($('#askText').value); };
-$('#ideas').onclick = (e) => { if (e.target.tagName === 'BUTTON') ask(e.target.textContent); };
+$('#ideas').onclick = (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.fill) { const i = $('#askText'); i.value = b.dataset.fill; i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
+  else ask(b.textContent);
+};
+$('#askMini').onsubmit = (e) => { e.preventDefault(); const t = $('#askMiniText').value; if (!t.trim()) return; $('#askMiniText').value = ''; document.querySelector('nav button[data-tab=elves]').click(); ask(t); };
+$('#talk').onclick = async (e) => {
+  const p = e.target.closest('[data-play]'), d = e.target.closest('[data-dellook]');
+  if (p) { if (S && !S.running) await api('/api/start'); api('/api/looks/apply', { id: p.dataset.play, zone: zoneSel === 'all' ? undefined : zoneSel }); }
+  if (d && confirm('Delete this look?')) { await api('/api/looks/delete', { id: d.dataset.dellook }); renderAi(); }
+};
+$('#askClear').onclick = () => api('/api/ask/clear');
 
 // ── Decorations ──
 (function sleeps() {

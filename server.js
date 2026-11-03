@@ -64,6 +64,10 @@ const sendAi = () => broadcast({ type: 'ai', data: aiState() });
 const llama = createLlama({ log, onChange: sendAi });
 const assistant = createAssistant({ engine, llama, log, onChange: sendAi });
 llama.warm();
+// Prime the elves once the Govee shows have loaded, and again if the list of
+// shows changes (it's part of their instructions).
+setTimeout(() => assistant.prime(), 30000);
+setInterval(() => assistant.prime(), 15 * 60000);
 
 // Live colours to the phone, 5x/s, only while someone's watching and it's on.
 setInterval(() => { if (clients().length && engine.running) broadcast({ type: 'preview', data: engine.preview() }); }, 200);
@@ -128,6 +132,7 @@ app.post('/api/ask', async (req, res) => {
   catch (e) { res.status(409).json({ ok: false, error: e.message }); }
 });
 app.get('/api/ask', (req, res) => res.json({ ok: true, ai: aiState() }));
+app.post('/api/ask/clear', (req, res) => { assistant.clear(); res.json({ ok: true }); });
 
 // The CA certificate (public half only) for the tablet to trust.
 app.get('/ca.crt', (req, res) => {

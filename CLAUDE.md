@@ -17,11 +17,16 @@ Govee LAN, ptReal and queue rules apply.
   Llama leaves it out (`zoneInText`).
 - `lib/effects.js`: `fx(ctx) -> {r,g,b}`. Keep effects pure functions of
   `ctx.t`. Per-light random state goes in `ctx.mem`.
-- `lib/llama.js` + `lib/assistant.js`: "Ask the elves". Local Llama 3.1 8B
-  (Ollama, CPU, ~60 tok/s reading, ~5 tok/s writing). Llama only returns
-  `{actions:[]}` (schema-enforced, ids are enums); the app runs them and
-  writes the reply. Keep the system prompt + examples static so Ollama's
-  prefix cache holds, and keep Llama's output short: writing is the cost.
+- `lib/llama.js` + `lib/assistant.js`: "Ask the elves" chat (Elves tab).
+  Local Llama 3.1 8B (Ollama, CPU, ~60 tok/s reading, ~5 tok/s writing).
+  Llama only returns `{actions:[]}` (schema-enforced, ids are enums); the app
+  runs them and writes the reply. Designs ("surprise me", "design ... called
+  X") are built aside with `engine.designLook` and saved, never applied live;
+  tweaks right after go to that draft; "play it" plays it. Show searches,
+  on/off and exact show names are handled in code, no Llama.
+  Prompt cache: system prompt + examples must stay byte-identical (saved
+  looks, history and draft go in the LAST message) or Ollama re-reads ~1500
+  tokens (~55 s). `assistant.prime()` warms it at startup.
 - `lib/goveeCloud.js`: Govee Platform API (cloud) for Govee scenes + app
   DIYs, offered to the engine as `govee:<kind>:<name>` looks. While one plays
   the engine sends nothing. Key in `secrets.json`, never in git or the UI.
