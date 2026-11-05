@@ -15,6 +15,8 @@ const { createLlama } = require('./lib/llama');
 const { createGoveeCloud } = require('./lib/goveeCloud');
 const { createEsphome } = require('./lib/esphome');
 const { createAssistant } = require('./lib/assistant');
+const { createTraining } = require('./lib/training');
+const { createTrainTest } = require('./lib/trainTest');
 
 const PORT = Number(process.env.PORT) || 3100;
 const HTTPS_PORT = Number(process.env.HTTPS_PORT) || 3101;
@@ -62,7 +64,24 @@ engine = createEngine({ file: DATA, govee, esphome, log, onChange: sendStatus, e
 const aiState = () => ({ ...llama.status(), history: assistant.history() });
 const sendAi = () => broadcast({ type: 'ai', data: aiState() });
 const llama = createLlama({ log, onChange: sendAi });
-const assistant = createAssistant({ engine, llama, log, onChange: sendAi });
+const training = createTraining({ file: path.join(__dirname, 'training.json'), log, onChange: () => { sendAi(); sendTrain(); } });
+const assistant = createAssistant({ engine, llama, training, log, onChange: sendAi });
+
+// ── Training sandbox ── a copy of the yard the elves can practise on. It has
+// no drivers, so nothing it does reaches a real light; only the app shows it.
+let trainTimer = null;   // coalesce bursts of training changes into one message
+const nogo = { turn() {}, brightness() {}, color() {}, segments() {}, pending: () => 0, dropEffects() {}, lastSeen: () => null, probe: async () => null };
+const sandbox = createEngine({ file: path.join(__dirname, 'sandbox.json'), govee: nogo, log: () => {}, auto: false, onChange: () => sendTrain(),
+  external: { looks: () => cloud.looks(), play: async () => {}, power: async () => {} } });
+const resetSandbox = () => { sandbox.loadConfig(engine.exportConfig()); try { sandbox.start(); } catch (_) {} };
+resetSandbox();
+const trainer = createAssistant({ engine: sandbox, llama, training, log: (m) => log(`[training] ${m}`), onChange: () => sendTrain() });
+const trainTest = createTrainTest({ llama, training, log, onChange: () => sendTrain() });
+const trainState = () => ({
+  history: trainer.history(), notes: training.notes(), examples: training.examples(), test: trainTest.status(),
+  yard: sandbox.status(),
+});
+function sendTrain() { if (trainTimer) return; trainTimer = setTimeout(() => { trainTimer = null; broadcast({ type: 'train', data: trainState() }); }, 100); }
 llama.warm();
 // Prime the elves once the Govee shows have loaded, and again if the list of
 // shows changes (it's part of their instructions).
@@ -71,6 +90,7 @@ setInterval(() => assistant.prime(), 15 * 60000);
 
 // Live colours to the phone, 5x/s, only while someone's watching and it's on.
 setInterval(() => { if (clients().length && engine.running) broadcast({ type: 'preview', data: engine.preview() }); }, 200);
+setInterval(() => { if (clients().length && sandbox.running) broadcast({ type: 'sbpreview', data: sandbox.preview() }); }, 200);
 
 const onConnect = (ws) => {
   ws.send(JSON.stringify({ type: 'status', data: engine.status() }));
@@ -78,6 +98,7 @@ const onConnect = (ws) => {
   ws.send(JSON.stringify({ type: 'logs', data: logs }));
   ws.send(JSON.stringify({ type: 'ai', data: aiState() }));
   ws.send(JSON.stringify({ type: 'cloud', data: cloud.status() }));
+  ws.send(JSON.stringify({ type: 'train', data: trainState() }));
 };
 for (const w of sockets) w.on('connection', onConnect);
 
@@ -133,6 +154,27 @@ app.post('/api/ask', async (req, res) => {
 });
 app.get('/api/ask', (req, res) => res.json({ ok: true, ai: aiState() }));
 app.post('/api/ask/clear', (req, res) => { assistant.clear(); res.json({ ok: true }); });
+
+// Training: same elves, practising on the sandbox yard.
+const trainRoute = (fn) => async (req, res) => {
+  try { const r = await fn(req.body || {}); res.json({ ok: true, ...(r || {}), train: trainState() }); }
+  catch (e) { res.status(409).json({ ok: false, error: e.message }); }
+};
+app.get('/api/train', (req, res) => res.json({ ok: true, train: trainState() }));
+app.post('/api/train/ask', trainRoute(({ text }) => trainer.ask(text)));
+app.post('/api/train/good', trainRoute(({ id }) => trainer.good(id)));
+app.post('/api/train/retry', trainRoute(({ id, hint }) => trainer.retry(id, hint)));
+app.post('/api/train/reset', trainRoute(() => { resetSandbox(); trainer.clear(); }));
+app.post('/api/train/play', trainRoute(({ id }) => { sandbox.applyLook(id); }));
+app.post('/api/train/keep', trainRoute(({ id }) => {
+  const look = sandbox.savedLooks().find(l => l.id === id);
+  if (!look) throw new Error('That design is gone');
+  return { kept: engine.importLook(look) };
+}));
+app.post('/api/train/note', trainRoute(({ text }) => { training.addNote(text); }));
+app.post('/api/train/note/delete', trainRoute(({ id }) => { training.deleteNote(id); }));
+app.post('/api/train/example/delete', trainRoute(({ id }) => { training.deleteExample(id); }));
+app.post('/api/train/test', trainRoute(() => { trainTest.run(); }));
 
 // The CA certificate (public half only) for the tablet to trust.
 app.get('/ca.crt', (req, res) => {

@@ -29,6 +29,13 @@ Govee LAN, ptReal and queue rules apply.
   Prompt cache: system prompt + examples must stay byte-identical (saved
   looks, history and draft go in the LAST message) or Ollama re-reads ~1500
   tokens (~55 s). `assistant.prime()` warms it at startup.
+- Training (`lib/training.js`, `lib/trainTest.js`, server `sandbox`): a
+  second engine (`auto:false`, no drivers) + second assistant practise on a
+  copy of the yard. Notes and 👍/corrected examples (training.json) are
+  appended after the built-in examples in every elves prompt. The scored test
+  (14 requests) runs in-app; keep it passing when changing prompts.
+- Effects get `ctx.yard` (0..1 position in the whole yard) besides the
+  per-zone `pos`; `runner` uses it to cross zones.
 - `lib/goveeCloud.js`: Govee Platform API (cloud) for Govee scenes + app
   DIYs, offered to the engine as `govee:<kind>:<name>` looks. While one plays
   the engine sends nothing. Key in `secrets.json`, never in git or the UI.

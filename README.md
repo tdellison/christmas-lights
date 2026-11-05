@@ -136,10 +136,27 @@ the house). The box on the Lights tab sends to it too.
   "make the backyard sparkle") change the design, not the yard. Designs take
   ~10-60 s; commands a few seconds.
 
+### Training the elves
+
+Elves tab → **Training**. The elves now work on a **sandbox copy** of the
+yard (shown above the chat); nothing reaches the real lights.
+
+- **👍** on a good answer saves it as an example they copy from then on.
+- **👎** asks what it should have done, redoes it, and a 👍 on the redo saves
+  the corrected version.
+- **House notes**: "remember the backyard is the deck" (or the Add box).
+- **Keep it** copies a design made in training into the real Looks.
+- **Run test**: 14 everyday requests, each checked; shows the score so you
+  can see whether teaching helped.
+
+What they're taught is in `training.json` and is used by the live elves too.
+
 ## Effects
 
 Solid, Breathe, Colour Fade, Wave, Chase, Candy Cane, Alternate, Twinkle,
-Snowfall, Sparkle, Hearth Glow, Rainbow, Music Pulse.
+Snowfall, Sparkle, Hearth Glow, Rainbow, Music Pulse, Runner (a flash
+shoots across the whole yard; the Grinch Run look is red/white with a green
+flash).
 
 To add one, write a function in `lib/effects.js`. It gets the time, the
 light's place in the yard and its palette, and returns a colour. It shows up

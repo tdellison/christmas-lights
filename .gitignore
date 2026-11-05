@@ -4,3 +4,5 @@ secrets.json
 deploy/secrets.yaml
 deploy/.esphome/
 tls/
+training.json
+sandbox.json

@@ -231,6 +231,28 @@
   .msg .acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
   .msg .acts button { font-size: 13px; padding: 5px 11px; border-radius: 999px; border: 1px solid #2b6a4a; background: #0f3626; color: var(--text); }
   .msg .acts button.go { background: linear-gradient(180deg, #2aa553, #1d8240); border-color: #3cc66a; color: #fff; font-weight: 700; }
+  .seg { display: inline-flex; border: 1px solid #2b6a4a; border-radius: 999px; overflow: hidden; }
+  .seg button { background: #0f3626; color: var(--text); border: 0; padding: 7px 14px; font-weight: 700; font-size: 14px; }
+  .seg button.on { background: linear-gradient(180deg, #d8323a, #a81f27); color: #fff; }
+  .sbyard { display: none; margin: 4px 0 6px; padding: 10px; border-radius: 14px; background: rgba(4,12,30,.7); border: 1px dashed #3c62a8; }
+  .sbyard.show { display: block; }
+  .sbyard .sbz { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+  .sbyard .sbz b { width: 86px; flex: none; font-size: 12px; color: var(--gold); }
+  .sbyard .sbz small { color: #9fb0d4; font-size: 11px; margin-left: auto; text-align: right; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sbyard .dots { display: flex; gap: 4px; flex-wrap: wrap; }
+  .sbyard .dot { width: 16px; height: 16px; }
+  .sbyard .off { opacity: .35; }
+  .msg .rate { display: flex; gap: 6px; margin-top: 7px; align-items: center; flex-wrap: wrap; }
+  .msg .rate button { font-size: 15px; padding: 3px 10px; border-radius: 999px; border: 1px solid #2b6a4a; background: #0f3626; color: var(--text); }
+  .msg .rate .fix { display: flex; gap: 6px; width: 100%; }
+  .msg .rate .fix input { flex: 1; min-width: 0; padding: 7px 9px; font-size: 14px; }
+  .msg .tag { font-size: 11px; color: #8ff0ae; font-weight: 700; }
+  .msg .tag.bad { color: #ffb4b8; }
+  .tl { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #1f4d37; font-size: 14px; }
+  .tl:last-child { border-bottom: 0; }
+  .tl .grow small { display: block; color: #9fb0d4; font-size: 12px; margin-top: 2px; }
+  .pf { font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 999px; flex: none; }
+  .pf.ok { background: rgba(47,179,92,.2); color: #8ff0ae; } .pf.no { background: rgba(227,55,63,.2); color: #ffb4b8; } .pf.wait { background: #1c2c4c; color: #9fb0d4; }
   .askmini form { display: flex; gap: 8px; }
   .askmini input { flex: 1; min-width: 0; }
   .askmini { padding: 12px 14px; }
@@ -490,7 +512,9 @@
   <section id="tab-elves">
     <div class="card ask">
       <h2>Ask the elves <span id="aiState">waking up…</span></h2>
-      <p class="note" style="margin-top:0">Tell them what you want, ask what shows you have, or have them design a new show. Designs are built while the current show keeps playing; tap <b>Play</b> when it's ready.</p>
+      <div class="seg" id="elfMode"><button data-mode="live">Live yard</button><button data-mode="train">Training</button></div>
+      <p class="note" id="elfNote" style="margin-top:8px"></p>
+      <div id="sbYard" class="sbyard"></div>
       <div class="talk" id="talk"></div>
       <div class="ideas" id="ideas">
         <button>Surprise me</button><button data-fill="Design a show called ">Design a show called…</button><button>What snow shows do I have?</button>
@@ -500,7 +524,27 @@
         <input id="askText" type="text" placeholder="e.g. design an icy blue show called Jack Frost" enterkeyhint="send">
         <button class="btn primary" id="askBtn">Send</button>
       </form>
-      <div class="row" style="margin-top:8px"><span class="grow"></span><button class="btn small" id="askClear">New chat</button></div>
+      <div class="row" style="margin-top:8px"><button class="btn small" id="sbReset" style="display:none">Reset sandbox to match the yard</button><span class="grow"></span><button class="btn small" id="askClear">New chat</button></div>
+    </div>
+
+    <div id="teach" style="display:none">
+      <div class="card">
+        <h2>House notes</h2>
+        <p class="note" style="margin-top:0">Things the elves always keep in mind. You can also type "remember …" in the chat.</p>
+        <div id="notes"></div>
+        <form id="noteForm" class="row" style="margin-top:8px" autocomplete="off"><input class="grow" id="noteText" type="text" placeholder="e.g. the backyard is the deck"><button class="btn primary">Add</button></form>
+      </div>
+      <div class="card">
+        <h2>What they've learned</h2>
+        <p class="note" style="margin-top:0">Requests and the right answers, from your 👍 and corrections. The elves copy these.</p>
+        <div id="examples"></div>
+      </div>
+      <div class="card">
+        <h2>Elves test</h2>
+        <p class="note" style="margin-top:0">14 everyday requests on a throwaway yard, each checked for the right result. Run it after teaching to see if they got better. Takes a few minutes; the elves are busy meanwhile.</p>
+        <div class="row"><button class="btn primary" id="testRun">Run test</button><span class="grow note" id="testScore" style="margin:0"></span></div>
+        <div id="testResults" style="margin-top:10px"></div>
+      </div>
     </div>
   </section>
 
@@ -570,7 +614,11 @@ const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let S = null, found = [], logs = [], AI = null, asking = null, G = null;
 const lookOpen = {};   // 'More Govee scenes' opened by hand
-let zoneSel = 'all';   // 'all' | group id ('front') | zone id
+let zoneSel = 'all';
+let T = null, sbLive = {}, fixing = null;   // training state, sandbox colours, 👎 being written
+let elfMode = 'live';
+try { elfMode = localStorage.getItem('elfMode') || 'live'; } catch (_) {}
+const training = () => elfMode === 'train';   // 'all' | group id ('front') | zone id
 try { zoneSel = localStorage.getItem('zoneSel') || 'all'; } catch (_) {}
 const zonesOf = (sel) => !S ? [] : sel === 'all' ? S.zones.map(z => z.id) : (S.groups.find(g => g.id === sel) || {}).zones || (S.zones.some(z => z.id === sel) ? [sel] : S.zones.map(z => z.id));
 const zoneName = (sel) => sel === 'all' ? 'Whole yard' : ([...S.groups, ...S.zones].find(z => z.id === sel) || {}).name || sel;
@@ -594,6 +642,7 @@ async function api(path, body, method = 'POST') {
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || 'Failed');
     if (j.status) { S = j.status; render(); }
+    if (j.train) { T = j.train; renderAi(); renderTeach(); }
     return j;
   } catch (e) { toast(e.message); return null; }
 }
@@ -613,6 +662,8 @@ function connect() {
     else if (m.type === 'logs') { logs = m.data; renderLog(); }
     else if (m.type === 'ai') { AI = m.data; renderAi(); }
     else if (m.type === 'cloud') { G = m.data; renderGovee(); }
+    else if (m.type === 'train') { T = m.data; renderAi(); renderTeach(); }
+    else if (m.type === 'sbpreview') paintSandbox(m.data);
     else if (m.type === 'log') { logs.push(m.data); if (logs.length > 200) logs.shift(); renderLog(); }
   };
 }
@@ -838,17 +889,66 @@ function renderAi() {
   st.textContent = AI.busy ? 'thinking…' : AI.ready ? (AI.lastError ? 'had trouble' : 'ready') : AI.lastError ? 'asleep' : 'waking up…';
   st.title = AI.lastError || AI.model || '';
   const talk = $('#talk');
-  const exists = (id) => S && S.looks.some(l => l.id === id);
+  const tr = training();
+  const hist = tr ? (T ? T.history : []) : AI.history;
+  const looksNow = tr ? (T && T.yard ? T.yard.looks : []) : (S ? S.looks : []);
+  const exists = (id) => looksNow.some(l => l.id === id);
   const acts = (h) => {
     const b = [];
-    if (h.saved && exists(h.saved.id)) b.push(`<button class="go" data-play="${esc(h.saved.id)}">▶ Play "${esc(h.saved.name)}"</button>`, `<button data-dellook="${esc(h.saved.id)}">Delete it</button>`);
+    if (h.saved && exists(h.saved.id)) b.push(`<button class="go" data-play="${esc(h.saved.id)}">▶ Play "${esc(h.saved.name)}"</button>`,
+      tr ? `<button data-keep="${esc(h.saved.id)}">Keep it (add to Looks)</button>` : `<button data-dellook="${esc(h.saved.id)}">Delete it</button>`);
     if (h.shows) b.push(...h.shows.map(x => `<button data-play="${esc(x.id)}">▶ ${esc(x.name)}</button>`));
-    return b.length ? `<div class="acts">${b.join('')}</div>` : '';
+    const acts = b.length ? `<div class="acts">${b.join('')}</div>` : '';
+    if (!tr) return acts;
+    // Training: rate each answer. 👍 keeps it as an example; 👎 asks what it should have done.
+    const tag = h.rated === 'good' ? '<span class="tag">✓ learned</span>' : h.rated === 'bad' ? '<span class="tag bad">corrected below</span>' : '';
+    const rate = h.canLearn && !h.rated ? `<button data-good="${esc(h.id)}" title="Right — learn this">👍</button><button data-bad="${esc(h.id)}" title="Wrong — correct it">👎</button>` : '';
+    const fix = fixing === h.id ? `<form class="fix" data-fix="${esc(h.id)}"><input placeholder="What should it have done?" autofocus><button class="btn small primary">Redo</button></form>` : '';
+    return acts + (rate || tag || fix ? `<div class="rate">${rate}${tag}${fix}</div>` : '') + (h.retryOf ? `<small>Redone with: "${esc(h.hint || '')}"</small>` : '');
   };
   const working = asking && /surprise|design|create|invent|new show|new look/i.test(asking) ? 'Designing… this can take a minute or two. The show keeps playing.' : '';
-  talk.innerHTML = AI.history.map(h => `<div class="msg you">${esc(h.text)}</div><div class="msg elf ${h.ok ? '' : 'bad'}">${esc(h.reply)}${acts(h)}${h.ms ? `<small>${(h.ms / 1000).toFixed(1)}s</small>` : ''}</div>`).join('')
+  if (talk.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;   // don't wipe a correction being typed
+  talk.innerHTML = hist.map(h => `<div class="msg you">${esc(h.text)}</div><div class="msg elf ${h.ok ? '' : 'bad'}">${esc(h.reply)}${acts(h)}${h.ms ? `<small>${(h.ms / 1000).toFixed(1)}s</small>` : ''}</div>`).join('')
     + (asking ? `<div class="msg you">${esc(asking)}</div><div class="msg elf thinking"><span></span><span></span><span></span>${working ? `<small>${working}</small>` : ''}</div>` : '');
   talk.scrollTop = talk.scrollHeight;
+  renderElfMode();
+}
+function renderElfMode() {
+  document.querySelectorAll('#elfMode button').forEach(b => b.classList.toggle('on', b.dataset.mode === elfMode));
+  const tr = training();
+  $('#elfNote').innerHTML = tr
+    ? 'Training: the elves practise on a <b>sandbox copy</b> of the yard below. Nothing here touches the real lights. Rate answers 👍 / 👎 to teach them.'
+    : 'Tell them what you want, ask what shows you have, or have them design a new show. Designs are built while the current show keeps playing; tap <b>Play</b> when it\'s ready.';
+  $('#sbYard').classList.toggle('show', tr);
+  $('#teach').style.display = tr ? 'block' : 'none';
+  $('#sbReset').style.display = tr ? '' : 'none';
+  if (tr) renderSandbox();
+}
+function renderSandbox() {
+  const Y = T && T.yard; if (!Y) return;
+  $('#sbYard').innerHTML = '<div class="note" style="margin:0 0 6px">Sandbox yard</div>' + Y.zones.map(z => {
+    const look = Y.looks.find(l => l.id === z.current);
+    return `<div class="sbz ${z.off ? 'off' : ''}"><b>${esc(z.name)}</b><div class="dots">${Y.lights.filter(l => l.zone === z.id).map(l => `<div class="dot" data-sblive="${esc(l.id)}" style="--idle:${esc(l.relay ? l.string || '#ffb46b' : l.palette[0])}"></div>`).join('')}</div><small>${z.off ? 'off' : look ? esc(look.name) : 'custom'}</small></div>`;
+  }).join('');
+  paintSandbox(sbLive);
+}
+function paintSandbox(colors) {
+  for (const [id, c] of Object.entries(colors)) {
+    sbLive[id] = c;
+    const el = document.querySelector(`[data-sblive="${CSS.escape(id)}"]`);
+    if (el) el.style.setProperty('--c', `rgb(${c.r},${c.g},${c.b})`);
+  }
+}
+function renderTeach() {
+  if (!T || !training()) return;
+  $('#notes').innerHTML = T.notes.length ? T.notes.map(n => `<div class="tl"><div class="grow">${esc(n.text)}</div><button class="btn small" data-delnote="${esc(n.id)}">✕</button></div>`).join('') : '<div class="empty">None yet.</div>';
+  $('#examples').innerHTML = T.examples.length ? T.examples.slice().reverse().map(e => `<div class="tl"><div class="grow">"${esc(e.request)}"<small>${esc(e.source)} · ${e.actions.map(a => a.do + (a.look ? ' ' + a.look : a.effect ? ' ' + a.effect : a.zone ? ' ' + a.zone : '')).join(', ')}</small></div><button class="btn small" data-delex="${esc(e.id)}">✕</button></div>`).join('') : '<div class="empty">Nothing yet. Give a 👍 to a good answer.</div>';
+  const t = T.test;
+  $('#testRun').disabled = t.running;
+  $('#testRun').textContent = t.running ? 'Running…' : 'Run test';
+  $('#testScore').textContent = t.running ? `${t.results.length} of ${t.total} done` : t.finishedAt ? `${t.pass} / ${t.total} passed · ${new Date(t.finishedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` : 'Not run yet.';
+  $('#testResults').innerHTML = t.results.map(r => `<div class="tl"><span class="pf ${r.ok ? 'ok' : 'no'}">${r.ok ? 'PASS' : 'FAIL'}</span><div class="grow">"${esc(r.request)}"<small>Expected: ${esc(r.expect)}</small><small>Elves: ${esc(r.reply)} · ${(r.ms / 1000).toFixed(1)}s</small></div></div>`).join('')
+    + (t.running ? `<div class="tl"><span class="pf wait">…</span><div class="grow note" style="margin:0">working</div></div>` : '');
 }
 function renderLog() { const el = $('#log'); el.textContent = logs.slice().reverse().map(l => `${new Date(l.at).toLocaleTimeString()}  ${l.msg}`).join('\n'); }
 
@@ -990,7 +1090,7 @@ $('#gScenes').onclick = async (e) => {
 async function ask(text) {
   text = text.trim(); if (!text || asking) return;
   asking = text; $('#askText').value = ''; $('#askBtn').disabled = true; renderAi();
-  await api('/api/ask', { text });
+  await api(training() ? '/api/train/ask' : '/api/ask', { text });
   asking = null; $('#askBtn').disabled = false; renderAi();
 }
 $('#askForm').onsubmit = (e) => { e.preventDefault(); ask($('#askText').value); };
@@ -1002,10 +1102,34 @@ $('#ideas').onclick = (e) => {
 $('#askMini').onsubmit = (e) => { e.preventDefault(); const t = $('#askMiniText').value; if (!t.trim()) return; $('#askMiniText').value = ''; document.querySelector('nav button[data-tab=elves]').click(); ask(t); };
 $('#talk').onclick = async (e) => {
   const p = e.target.closest('[data-play]'), d = e.target.closest('[data-dellook]');
+  const g = e.target.closest('[data-good]'), bd = e.target.closest('[data-bad]'), k = e.target.closest('[data-keep]');
+  if (g) return api('/api/train/good', { id: g.dataset.good });
+  if (bd) { fixing = bd.dataset.bad; renderAi(); const i = $('#talk .fix input'); if (i) i.focus(); return; }
+  if (k) { const r = await api('/api/train/keep', { id: k.dataset.keep }); if (r && r.kept) toast(`"${r.kept.name}" added to Looks`); return; }
+  if (p && training()) return api('/api/train/play', { id: p.dataset.play });
   if (p) { if (S && !S.running) await api('/api/start'); api('/api/looks/apply', { id: p.dataset.play, zone: zoneSel === 'all' ? undefined : zoneSel }); }
   if (d && confirm('Delete this look?')) { await api('/api/looks/delete', { id: d.dataset.dellook }); renderAi(); }
 };
-$('#askClear').onclick = () => api('/api/ask/clear');
+$('#askClear').onclick = () => api(training() ? '/api/train/reset' : '/api/ask/clear');
+$('#talk').addEventListener('submit', async (e) => {
+  const f = e.target.closest('[data-fix]'); if (!f) return;
+  e.preventDefault();
+  const hint = f.querySelector('input').value.trim(); if (!hint) return;
+  const id = f.dataset.fix; fixing = null; f.querySelector('input').blur();
+  asking = `(redo) ${hint}`; renderAi();
+  await api('/api/train/retry', { id, hint });
+  asking = null; renderAi();
+});
+$('#elfMode').onclick = (e) => {
+  const b = e.target.closest('[data-mode]'); if (!b) return;
+  elfMode = b.dataset.mode; try { localStorage.setItem('elfMode', elfMode); } catch (_) {}
+  fixing = null; renderAi(); renderTeach();
+};
+$('#sbReset').onclick = () => { if (confirm('Copy the real yard into the sandbox and clear the training chat?')) api('/api/train/reset'); };
+$('#noteForm').onsubmit = async (e) => { e.preventDefault(); const t = $('#noteText').value.trim(); if (!t) return; if (await api('/api/train/note', { text: t })) $('#noteText').value = ''; };
+$('#notes').onclick = (e) => { const b = e.target.closest('[data-delnote]'); if (b) api('/api/train/note/delete', { id: b.dataset.delnote }); };
+$('#examples').onclick = (e) => { const b = e.target.closest('[data-delex]'); if (b && confirm('Forget this example?')) api('/api/train/example/delete', { id: b.dataset.delex }); };
+$('#testRun').onclick = () => { if (confirm('Run the 14-request test? It takes a few minutes and the elves are busy meanwhile.')) api('/api/train/test'); };
 
 // ── Decorations ──
 (function sleeps() {
