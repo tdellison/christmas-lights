@@ -6,3 +6,4 @@ deploy/.esphome/
 tls/
 training.json
 sandbox.json
+data/

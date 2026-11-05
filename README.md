@@ -151,6 +151,11 @@ yard (shown above the chat); nothing reaches the real lights.
 
 What they're taught is in `training.json` and is used by the live elves too.
 
+**Govee show sniffer** (experiment): `node tools/sniff-govee.js 192.168.1.209 --all`
+plays each Govee show and samples the spotlight's colour 4×/s to record its
+flavor (main colours, how fast it changes) in `data/sniff/`. If it reports
+STUCK, the light doesn't reveal show colours and this can't work.
+
 ## Effects
 
 Solid, Breathe, Colour Fade, Wave, Chase, Candy Cane, Alternate, Twinkle,
