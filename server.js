@@ -14,6 +14,7 @@ const { createEngine } = require('./lib/engine');
 const { createLlama } = require('./lib/llama');
 const { createGoveeCloud } = require('./lib/goveeCloud');
 const { createEsphome } = require('./lib/esphome');
+const { createTuya } = require('./lib/tuya');
 const { createAssistant } = require('./lib/assistant');
 const { createTraining } = require('./lib/training');
 const { createTrainTest } = require('./lib/trainTest');
@@ -58,7 +59,8 @@ let engine = null;
 const sendStatus = () => engine && broadcast({ type: 'status', data: engine.status() });
 const cloud = createGoveeCloud({ file: SECRETS, log, onChange: () => { sendStatus(); broadcast({ type: 'cloud', data: cloud.status() }); } });
 const esphome = createEsphome({ log });
-engine = createEngine({ file: DATA, govee, esphome, log, onChange: sendStatus, external: { looks: () => cloud.looks(), play: (k, macs) => cloud.play(k, macs), power: (on) => cloud.power(on) } });
+const tuya = createTuya({ log });
+engine = createEngine({ file: DATA, govee, esphome, tuya, log, onChange: sendStatus, external: { looks: () => cloud.looks(), play: (k, macs) => cloud.play(k, macs), power: (on) => cloud.power(on) } });
 
 // Ask the elves: plain-English commands through local Llama.
 const aiState = () => ({ ...llama.status(), history: assistant.history() });

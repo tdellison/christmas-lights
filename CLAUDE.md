@@ -45,6 +45,10 @@ Govee LAN, ptReal and queue rules apply.
   names, `deploy/esp32-relays.yaml`). Relay lights run effects on
   white/black and are on when bright; `light.string` is preview colour only.
   One command per entity per gap (lights 250 ms, switches 100 ms), none in flight.
+- `lib/tuya.js`: Tuya smart plugs via `tuyapi` (local). Device `kind: plug`,
+  one light, on/off only (follows light.on + zone + show, ignores effects);
+  min 4 s between switches, newest wish wins. `tuyaKey` is redacted from
+  status (`hasKey`).
 - `public/index.html`: single-file phone UI over a WebSocket.
 
 Rules:

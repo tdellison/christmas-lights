@@ -108,6 +108,25 @@ Strings can only be on or off, so effects become on/off patterns: Chase and
 Alternate step across the channels, Twinkle/Sparkle/Snowfall pop strings on,
 Breathe and Fade blink slowly, and Music Pulse flashes on the beat.
 
+## Smart plug (Tuya: Enbrighten, Smart Life)
+
+A Wi-Fi plug switches whatever is plugged into it (e.g. all the C9s) **on and
+off only**: with the show, its zone's switch, the schedule and the elves. It
+never blinks for effects: its relay clicks and wears out, so it switches at
+most every 4 s and only for real on/off changes. Smart lights plugged into it
+lose power whenever it's off, so keep smart lights on an always-on outlet.
+
+One-time setup (gets the plug's device ID and local key):
+1. Move the plug from the Enbrighten app to the **Smart Life** app.
+2. Free account at **iot.tuya.com** → Cloud → create a project (data centre:
+   Western America) → Devices → Link App Account → scan the QR with Smart Life.
+3. Run `python3 -m tinytuya wizard` with the project's Access ID / Secret; it
+   lists each plug's **id**, **key**, IP and protocol version.
+4. App: **Setup → + Add smart plug**, fill in IP, Device ID, Local key and
+   version, pick its zone, Save, Test.
+
+The key stays on the server (config.json) and is never sent to the app's page.
+
 ## Govee scenes and DIYs
 
 **Setup → Govee account**: paste the API key from the Govee app (Profile →
