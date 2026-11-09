@@ -34,8 +34,10 @@ Govee LAN, ptReal and queue rules apply.
   copy of the yard. Notes and 👍/corrected examples (training.json) are
   appended after the built-in examples in every elves prompt. The scored test
   (14 requests) runs in-app; keep it passing when changing prompts.
-- Effects get `ctx.yard` (0..1 position in the whole yard) besides the
-  per-zone `pos`; `runner` uses it to cross zones.
+- Effects get `ctx.yard` (0..1 position across the light's AREA: both front
+  zones together, the backyard on its own) besides the per-zone `pos`;
+  `runner` uses it to cross the front yard. The backyard is its own show
+  (owner's decision): the Director picks it independently.
 - Catalog / Watch / Director: `lib/catalog.js` (catalog.json: per look id
   up/down, tags, notes, sniffed flavor from data/sniff), `lib/watch.js`
   (plays each show N min, pauses rotate), `lib/director.js` (Qwen picks front
