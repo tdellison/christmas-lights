@@ -71,8 +71,21 @@ const sendAi = () => broadcast({ type: 'ai', data: aiState() });
 const llama = createLlama({ log, onChange: sendAi });
 const training = createTraining({ file: path.join(__dirname, 'training.json'), log, onChange: () => { sendAi(); sendTrain(); } });
 // Show catalog (ratings, tags, notes, sniffed flavor) and Watch mode.
-const catalog = createCatalog({ file: path.join(__dirname, 'catalog.json'), sniffDir: path.join(__dirname, 'data', 'sniff'), log, onChange: () => sendWatch() });
-const watch = createWatch({ engine, catalog, log, onChange: () => sendWatch() });
+const SNIFF_DIR = path.join(__dirname, 'data', 'sniff');
+const { PALETTES } = require('./lib/effects');
+const { favourites } = require('./lib/flavor');
+// "Your Favourites" palette: the colours of everything the owner 👍'd. Kept up
+// to date as shows are rated or sniffed; the elves and Director design with it.
+function updateFavourites() {
+  const cols = favourites(catalog.all(), engine.status().looks, PALETTES);
+  const had = JSON.stringify(PALETTES.favourites && PALETTES.favourites.colors);
+  if (cols.length >= 2) PALETTES.favourites = { name: 'Your Favourites', colors: cols };
+  else delete PALETTES.favourites;
+  if (JSON.stringify(PALETTES.favourites && PALETTES.favourites.colors) !== had) sendStatus();
+}
+const catalog = createCatalog({ file: path.join(__dirname, 'catalog.json'), sniffDir: SNIFF_DIR, palettes: PALETTES, log, onChange: () => { updateFavourites(); sendWatch(); } });
+const watch = createWatch({ engine, catalog, sniffDir: SNIFF_DIR, log, onChange: () => sendWatch() });
+setTimeout(updateFavourites, 5000);
 const watchState = () => ({ watch: watch.status(), catalog: catalog.all(), tags: catalog.TAGS, director: director ? director.status() : null });
 function sendWatch() { broadcast({ type: 'watch', data: watchState() }); }
 const assistant = createAssistant({ engine, llama, training, catalog, log, onChange: sendAi });

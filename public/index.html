@@ -499,6 +499,7 @@
         <form id="wNoteForm" class="row" autocomplete="off"><input class="grow" id="wNote" type="text" placeholder="Note (e.g. kids love it, too fast)"><button class="btn small primary">Save</button></form>
         <div id="wNotes" class="note"></div>
         <p class="note" id="wFlavor"></p>
+        <p class="note" id="wFav"></p>
         <div class="row actions" style="margin-top:8px"><button class="btn" id="wPrev">◀ Back</button><button class="btn" id="wMore">+1 min</button><button class="btn go" id="wNext">Next ▶</button><button class="btn" id="wStop">Stop</button></div>
       </div>
     </div>
@@ -1011,7 +1012,11 @@ function renderWatch() {
   $('#wScore').textContent = e.up || e.down ? `${e.up} 👍 · ${e.down} 👎` : '';
   $('#wTags').innerHTML = W.tags.map(t => `<button class="${e.tags.includes(t) ? 'on' : ''}" data-wtag="${esc(t)}">${esc(t)}</button>`).join('');
   $('#wNotes').innerHTML = e.notes.map(n => `<div>“${esc(n.text)}” <button class="btn small" data-wdeln="${n.at}" style="padding:2px 8px">✕</button></div>`).join('');
-  $('#wFlavor').textContent = e.flavor ? (e.flavor.stuck ? 'Sniffer: this light hides its show colours.' : `Sniffed: ${e.flavor.colours.map(c => c.hex).join(', ')} · ${e.flavor.changesPerSecond} changes/s`) : '';
+  const sw = (h) => `<b style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${h};vertical-align:-1px;box-shadow:0 0 5px ${h}"></b>`;
+  $('#wFlavor').innerHTML = w.sniffing ? '🎨 Recording this show\'s colours…'
+    : e.flavor ? (e.flavor.stuck ? 'The spotlight hides this show\'s colours.' : `Colours: ${e.flavor.colours.map(c => sw(c.hex)).join(' ')} · ${e.flavor.changesPerSecond >= 2 ? 'fast' : e.flavor.changesPerSecond >= 0.5 ? 'medium' : 'slow'}`) : '';
+  const fav = S.palettes.find(p => p.id === 'favourites');
+  $('#wFav').innerHTML = fav ? `Your favourite colours so far: ${fav.colors.map(sw).join(' ')}` : '';
   tickWatch();
 }
 function tickWatch() {

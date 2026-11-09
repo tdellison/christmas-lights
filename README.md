@@ -145,8 +145,14 @@ ignores it) and never sent to the browser.
 which shows; it uses the selected zone). For the one playing: **👍 / 👎**,
 tags (cozy, energetic, kids, late night, front-only, back-only) and a note.
 Back / +1 min / Next / Stop. Auto-rotate pauses while watching. Everything
-goes into the show catalog (`catalog.json`, with any sniffer colours from
-`data/sniff/`), and look cards show their score and tags.
+goes into the show catalog (`catalog.json`), and look cards show their score
+and tags.
+
+While a Govee show plays, Watch mode also **records its colours and pace**
+(it asks a spotlight its colour ~4×/s; the spotlight must be online), so one
+pass rates and catalogues. The colours of everything you 👍 become the **"Your
+Favourites" palette**, which Qwen designs and directs with ("design something
+in the style of my favourites") and you can pick in the light editor.
 
 **Looks → Director**: Qwen picks what plays out front and out back every N
 minutes from that catalog, the time of night and what he played lately, and

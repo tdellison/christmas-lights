@@ -42,7 +42,9 @@ Govee LAN, ptReal and queue rules apply.
   + back every N min; code enforces 👎 never, front/back-only, no repeats,
   Govee only where d.mac known; weighted fallback if Qwen fails). The
   compact catalog goes in the LAST message only (elves: only for show-ish
-  requests) to keep the prompt cache.
+  requests) to keep the prompt cache. Watch sniffs Govee shows (engine
+  probeDevice ~4/s, `lib/flavor.js` summarize) into catalog flavor; server
+  keeps PALETTES.favourites = colours of 👍 shows (flavor.favourites).
 - `lib/goveeCloud.js`: Govee Platform API (cloud) for Govee scenes + app
   DIYs, offered to the engine as `govee:<kind>:<name>` looks. While one plays
   the engine sends nothing. Key in `secrets.json`, never in git or the UI.
