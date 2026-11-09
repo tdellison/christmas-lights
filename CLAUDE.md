@@ -57,7 +57,9 @@ Govee LAN, ptReal and queue rules apply.
 - `lib/tuya.js`: Tuya smart plugs via `tuyapi` (local). Device `kind: plug`,
   one light, on/off only (follows light.on + zone + show, ignores effects);
   min 4 s between switches, newest wish wins. `tuyaKey` is redacted from
-  status (`hasKey`).
+  status (`hasKey`). `light.blink` (s, ≥10) blinks it until tonight's
+  click budget (600, `tuya.clicksLeft`) runs out; Qwen sets it (elves
+  `set.blink`, Director `plugBlink` per pick).
 - `public/index.html`: single-file phone UI over a WebSocket.
 
 Rules:

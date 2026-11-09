@@ -127,6 +127,13 @@ One-time setup (gets the plug's device ID and local key):
 
 The key stays on the server (config.json) and is never sent to the app's page.
 
+**Blinking**: the plug can blink everything on it together, at most every 10 s,
+within a nightly budget of ~600 clicks (about three seasons of plug life).
+Qwen decides when: the Director chooses blink or steady with each show it
+picks, its designs can include it, and the elves will do it on request
+("make the C9s blink slowly"). Once tonight's clicks are used, the C9s stay
+steady until tomorrow.
+
 ## Govee scenes and DIYs
 
 **Setup → Govee account**: paste the API key from the Govee app (Profile →
