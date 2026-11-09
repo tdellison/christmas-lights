@@ -7,3 +7,5 @@ tls/
 training.json
 sandbox.json
 data/
+catalog.json
+director.json

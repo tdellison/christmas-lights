@@ -253,6 +253,16 @@
   .tl .grow small { display: block; color: #9fb0d4; font-size: 12px; margin-top: 2px; }
   .pf { font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 999px; flex: none; }
   .pf.ok { background: rgba(47,179,92,.2); color: #8ff0ae; } .pf.no { background: rgba(227,55,63,.2); color: #ffb4b8; } .pf.wait { background: #1c2c4c; color: #9fb0d4; }
+  .watch .wnow { text-align: center; padding: 6px 0 10px; }
+  .watch .wnow #wName { font: 700 28px/1.1 "Mountains of Christmas", Georgia, serif; color: var(--warm); margin: 4px 0; }
+  .watch .wnow small { color: #9fb0d4; font-size: 13px; }
+  .watch .wrate { display: flex; gap: 12px; justify-content: center; align-items: center; margin-bottom: 10px; }
+  .watch .wrate button { font-size: 30px; width: 74px; height: 58px; border-radius: 16px; border: 1px solid #2b6a4a; background: #0f3626; }
+  .watch .wrate button.hit { transform: scale(1.12); box-shadow: 0 0 16px rgba(246,197,91,.6); border-color: var(--gold); }
+  .watch .wtags { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 10px; }
+  .watch .wtags button { font-size: 14px; padding: 7px 12px; border-radius: 999px; border: 1px solid #2b6a4a; background: #0f3626; color: var(--text); }
+  .watch .wtags button.on { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+  .watch #wNotes div { padding: 3px 0; }
   .askmini form { display: flex; gap: 8px; }
   .askmini input { flex: 1; min-width: 0; }
   .askmini { padding: 12px 14px; }
@@ -276,7 +286,8 @@
     text-shadow: 0 0 12px rgba(246,197,91,.35); margin-top: 4px; }
   .card h2::before { width: 24px; height: 17px; }
   #aiState, .card h2 .badge { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-  input[type=text], input[type=time], input[type=number], input[type=password], select { background: #0c3021; border-color: #2b6a4a; }
+  input[type=text], input[type=search], input[type=time], input[type=number], input[type=password], select { background: #0c3021; border-color: #2b6a4a; }
+  input[type=search] { width: 100%; color: var(--text); border: 1px solid #2b6a4a; border-radius: 12px; padding: 11px; font-size: 16px; }
   input[type=password] { width: 100%; color: var(--text); border: 1px solid #2b6a4a; border-radius: 12px; padding: 11px; font-size: 16px; }
   button.btn { background: #144531; border-color: #2b6a4a; }
   button.btn.primary { background: repeating-linear-gradient(-45deg, rgba(255,255,255,.12) 0 6px, transparent 6px 14px), linear-gradient(180deg, #d8323a, #a81f27); }
@@ -471,6 +482,27 @@
 
   <!-- LOOKS -->
   <section id="tab-looks">
+    <div class="card watch" id="watchCard">
+      <h2>Watch &amp; rate</h2>
+      <div id="watchIdle">
+        <p class="note" style="margin-top:0">Plays each show in turn so you can rate it. Your 👍/👎, tags and notes teach the elves and the Director what you like.</p>
+        <div class="grid2">
+          <div><label class="lbl">Minutes each</label><input id="wMin" type="number" min="0.25" max="30" step="0.25" value="2"></div>
+          <div><label class="lbl">Shows</label><select id="wWhich"><option value="mine">My looks, DIYs &amp; Christmas scenes</option><option value="unrated">Only ones not rated yet</option><option value="govee">Govee DIYs &amp; Christmas scenes</option><option value="all">Everything (incl. all 69 Govee scenes)</option></select></div>
+        </div>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="wStart">▶ Start watching</button><span class="note grow" id="wZoneNote" style="margin:0"></span></div>
+      </div>
+      <div id="watchLive" style="display:none">
+        <div class="wnow"><small id="wPos"></small><div id="wName"></div><small id="wLeft"></small></div>
+        <div class="wrate"><button id="wUp">👍</button><button id="wDown">👎</button><span id="wScore" class="note" style="margin:0"></span></div>
+        <div class="wtags" id="wTags"></div>
+        <form id="wNoteForm" class="row" autocomplete="off"><input class="grow" id="wNote" type="text" placeholder="Note (e.g. kids love it, too fast)"><button class="btn small primary">Save</button></form>
+        <div id="wNotes" class="note"></div>
+        <p class="note" id="wFlavor"></p>
+        <div class="row actions" style="margin-top:8px"><button class="btn" id="wPrev">◀ Back</button><button class="btn" id="wMore">+1 min</button><button class="btn go" id="wNext">Next ▶</button><button class="btn" id="wStop">Stop</button></div>
+      </div>
+    </div>
+
     <div class="card">
       <h2 id="looksTitle">Looks</h2>
       <input id="lookFind" type="search" placeholder="Find a show (e.g. sleigh, candy, grinch)" autocomplete="off" style="margin-bottom:10px">
@@ -479,6 +511,17 @@
         <input class="grow" id="lookName" type="text" placeholder="Name this look">
         <button class="btn primary" id="lookSave">Save current</button>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>Director</h2>
+      <div class="row">
+        <div class="grow">Let Qwen pick the shows every <input id="dirMin" type="number" min="1" max="120" style="width:70px;display:inline-block"> min</div>
+        <label class="switch"><input id="dirOn" type="checkbox"><span></span></label>
+      </div>
+      <p class="note" id="dirNote">He chooses front and back from your 👍/👎, tags and notes (rate shows in Watch &amp; rate), the time of night and what he played lately. Never a 👎 show.</p>
+      <div id="dirRecent"></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="dirNow">Pick now</button></div>
     </div>
 
     <div class="card">
@@ -615,7 +658,8 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<'
 let S = null, found = [], logs = [], AI = null, asking = null, G = null;
 const lookOpen = {};   // 'More Govee scenes' opened by hand
 let zoneSel = 'all';
-let T = null, sbLive = {}, fixing = null;   // training state, sandbox colours, 👎 being written
+let T = null, sbLive = {}, fixing = null;
+let W = null;   // watch mode + catalog   // training state, sandbox colours, 👎 being written
 let elfMode = 'live';
 try { elfMode = localStorage.getItem('elfMode') || 'live'; } catch (_) {}
 const training = () => elfMode === 'train';   // 'all' | group id ('front') | zone id
@@ -643,6 +687,7 @@ async function api(path, body, method = 'POST') {
     if (!j.ok) throw new Error(j.error || 'Failed');
     if (j.status) { S = j.status; render(); }
     if (j.train) { T = j.train; renderAi(); renderTeach(); }
+    if (j.watch) { W = { watch: j.watch, catalog: j.catalog, tags: j.tags, director: j.director }; renderWatch(); }
     return j;
   } catch (e) { toast(e.message); return null; }
 }
@@ -664,6 +709,7 @@ function connect() {
     else if (m.type === 'cloud') { G = m.data; renderGovee(); }
     else if (m.type === 'train') { T = m.data; renderAi(); renderTeach(); }
     else if (m.type === 'sbpreview') paintSandbox(m.data);
+    else if (m.type === 'watch') { W = m.data; renderWatch(); }
     else if (m.type === 'log') { logs.push(m.data); if (logs.length > 200) logs.shift(); renderLog(); }
   };
 }
@@ -701,12 +747,12 @@ function render() {
   renderZones();
   const cur = S.looks.find(l => l.id === S.current);
   const mixed = S.zones.some(z => z.current) ? 'Mixed looks' : 'Custom';
-  $('#nowLook').textContent = cur ? cur.name + (cur.govee ? ' (Govee)' : '') : (S.lights.length ? mixed : 'No lights yet — go to Setup');
+  $('#nowLook').textContent = W && W.watch.running ? `Watching: ${W.watch.show.name}` : cur ? cur.name + (cur.govee ? ' (Govee)' : '') : (S.lights.length ? mixed : 'No lights yet — go to Setup');
   if (document.activeElement !== $('#master')) { $('#master').value = S.master; }
   $('#masterVal').textContent = S.master + '%';
   // keep selection valid
   for (const id of [...selected]) if (!S.lights.some(l => l.id === id)) selected.delete(id);
-  renderLights(); renderEditor(); renderLooks(); renderDevices(); renderFound(); renderAi();
+  renderLights(); renderEditor(); renderLooks(); renderDevices(); renderFound(); renderAi(); renderWatch();
   if (S.running) paintPreview(live);
 }
 
@@ -774,7 +820,7 @@ function renderLooks() {
   };
   const card = (l) => `
     <button class="look ${l.govee ? 'gv' : ''} ${l.id === selLook() ? 'on' : ''}" data-look="${esc(l.id)}">${esc(l.name)}
-      <small>${l.govee === 'diy' ? 'Your Govee DIY' : l.govee ? 'Govee scene' : l.builtin ? esc(effName(l.effect)) : 'Saved look'}</small>
+      <small>${l.govee === 'diy' ? 'Your Govee DIY' : l.govee ? 'Govee scene' : l.builtin ? esc(effName(l.effect)) : 'Saved look'}${(() => { const c = W && W.catalog[l.id]; if (!c) return ''; const sc = c.up - c.down; return (sc ? ` · ${sc > 0 ? '👍' + sc : '👎' + -sc}` : '') + (c.tags.length ? ` · ${esc(c.tags.join(', '))}` : ''); })()}</small>
       <div class="bar">${l.govee ? '<i></i>' : (palOf(l).length ? palOf(l) : ['#555']).map(c => `<i style="background:${c};color:${c}"></i>`).join('')}</div>
     </button>`;
   // Grouped so ~100 shows stay findable; the search box filters every group.
@@ -942,6 +988,39 @@ function paintSandbox(colors) {
     if (el) el.style.setProperty('--c', `rgb(${c.r},${c.g},${c.b})`);
   }
 }
+function renderDirector() {
+  const d = W && W.director; if (!d) return;
+  $('#dirOn').checked = d.enabled;
+  if (document.activeElement !== $('#dirMin')) $('#dirMin').value = d.minutes;
+  $('#dirNow').disabled = !d.enabled || d.thinking;
+  $('#dirNow').textContent = d.thinking ? 'Thinking…' : 'Pick now';
+  $('#dirRecent').innerHTML = d.recent.map(r => `<div class="tl"><div class="grow"><b>${esc(r.name)}</b> ${r.area === 'back' ? 'out back' : 'out front'}<small>${esc(r.by === 'Qwen' ? r.why : 'picked from your ratings (Qwen unavailable)')} · ${new Date(r.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</small></div></div>`).join('')
+    + (d.enabled && d.nextAt ? `<p class="note">Next pick around ${new Date(d.nextAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.</p>` : d.enabled && !(S && S.running) ? '<p class="note">Starts when the lights are on.</p>' : '');
+}
+function renderWatch() {
+  if (!W || !S) return;
+  renderDirector();
+  const w = W.watch;
+  $('#watchIdle').style.display = w.running ? 'none' : 'block';
+  $('#watchLive').style.display = w.running ? 'block' : 'none';
+  $('#wZoneNote').textContent = zoneSel === 'all' ? 'Plays on the whole yard.' : `Plays on ${zoneName(zoneSel)} only.`;
+  if (!w.running) return;
+  const e = w.entry || { up: 0, down: 0, tags: [], notes: [] };
+  $('#wPos').textContent = `Show ${w.i + 1} of ${w.total}${w.zone ? ` · ${zoneName(w.zone)}` : ''}${w.show.govee ? ' · Govee' : ''}`;
+  $('#wName').textContent = w.show.name;
+  $('#wScore').textContent = e.up || e.down ? `${e.up} 👍 · ${e.down} 👎` : '';
+  $('#wTags').innerHTML = W.tags.map(t => `<button class="${e.tags.includes(t) ? 'on' : ''}" data-wtag="${esc(t)}">${esc(t)}</button>`).join('');
+  $('#wNotes').innerHTML = e.notes.map(n => `<div>“${esc(n.text)}” <button class="btn small" data-wdeln="${n.at}" style="padding:2px 8px">✕</button></div>`).join('');
+  $('#wFlavor').textContent = e.flavor ? (e.flavor.stuck ? 'Sniffer: this light hides its show colours.' : `Sniffed: ${e.flavor.colours.map(c => c.hex).join(', ')} · ${e.flavor.changesPerSecond} changes/s`) : '';
+  tickWatch();
+}
+function tickWatch() {
+  if (!W || !W.watch.running) return;
+  const s = Math.max(0, Math.round((W.watch.endsAt - Date.now()) / 1000));
+  $('#wLeft').textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} left${W.watch.next ? ` · next: ${W.watch.next.name}` : ' · last one'}`;
+}
+setInterval(tickWatch, 1000);
+
 function renderTeach() {
   if (!T || !training()) return;
   $('#notes').innerHTML = T.notes.length ? T.notes.map(n => `<div class="tl"><div class="grow">${esc(n.text)}</div><button class="btn small" data-delnote="${esc(n.id)}">✕</button></div>`).join('') : '<div class="empty">None yet.</div>';
@@ -1008,6 +1087,21 @@ $('#edOff').onclick = () => patchSel({ on: false });
 $('#edIdent').onclick = () => { const ids = targets(); if (ids.length !== 1) return toast('Tick just one light to find it'); api('/api/lights/identify', { id: ids[0] }); };
 
 $('#lookFind').addEventListener('input', () => renderLooks());
+$('#dirOn').onchange = (e) => wApi('/api/director', { enabled: e.target.checked, minutes: +$('#dirMin').value });
+$('#dirMin').onchange = (e) => wApi('/api/director', { minutes: +e.target.value });
+$('#dirNow').onclick = () => wApi('/api/director/now');
+$('#wStart').onclick = () => api('/api/watch/start', { minutes: +$('#wMin').value, which: $('#wWhich').value, zone: S.zones.some(z => z.id === zoneSel) || S.groups.some(g => g.id === zoneSel) ? zoneSel : undefined });
+const wApi = (p, b) => api(p, b).then(r => { if (r && r.watch) { W = { watch: r.watch, catalog: r.catalog, tags: r.tags, director: r.director }; renderWatch(); } return r; });
+const wFlash = (el) => { el.classList.add('hit'); setTimeout(() => el.classList.remove('hit'), 400); };
+$('#wUp').onclick = () => { wFlash($('#wUp')); wApi('/api/catalog/rate', { id: W.watch.show.id, up: true }); };
+$('#wDown').onclick = () => { wFlash($('#wDown')); wApi('/api/catalog/rate', { id: W.watch.show.id, up: false }); };
+$('#wTags').onclick = (e) => { const b = e.target.closest('[data-wtag]'); if (b) wApi('/api/catalog/tag', { id: W.watch.show.id, tag: b.dataset.wtag }); };
+$('#wNoteForm').onsubmit = async (e) => { e.preventDefault(); const t = $('#wNote').value.trim(); if (!t) return; if (await wApi('/api/catalog/note', { id: W.watch.show.id, text: t })) $('#wNote').value = ''; };
+$('#wNotes').onclick = (e) => { const b = e.target.closest('[data-wdeln]'); if (b) wApi('/api/catalog/note/delete', { id: W.watch.show.id, at: +b.dataset.wdeln }); };
+$('#wNext').onclick = () => wApi('/api/watch/next');
+$('#wPrev').onclick = () => wApi('/api/watch/prev');
+$('#wMore').onclick = () => wApi('/api/watch/more');
+$('#wStop').onclick = () => wApi('/api/watch/stop');
 $('#looks').addEventListener('toggle', (e) => { if (e.target.dataset && e.target.dataset.lg) lookOpen[e.target.dataset.lg] = e.target.open; }, true);
 $('#looks').onclick = (e) => { const b = e.target.closest('[data-look]'); if (b) api('/api/looks/apply', { id: b.dataset.look, zone: zoneSel === 'all' ? undefined : zoneSel }); };
 $('#zchips').onclick = (e) => { const b = e.target.closest('[data-zsel]'); if (b) pickZone(b.dataset.zsel); };

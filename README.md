@@ -139,6 +139,25 @@ Govee Christmas & winter, More Govee scenes) with a search box. New DIYs show up
 within the hour, or tap Refresh. The key is kept in `secrets.json` (git
 ignores it) and never sent to the browser.
 
+## Watch & rate, and the Director
+
+**Looks → Watch & rate** plays every show in turn (choose minutes each and
+which shows; it uses the selected zone). For the one playing: **👍 / 👎**,
+tags (cozy, energetic, kids, late night, front-only, back-only) and a note.
+Back / +1 min / Next / Stop. Auto-rotate pauses while watching. Everything
+goes into the show catalog (`catalog.json`, with any sniffer colours from
+`data/sniff/`), and look cards show their score and tags.
+
+**Looks → Director**: Qwen picks what plays out front and out back every N
+minutes from that catalog, the time of night and what he played lately, and
+says why. Your hard rules are enforced in code: never a 👎 show,
+front-only/back-only respected, no recent repeats, Govee shows only where
+the app knows the Govee lights (Scan → Use). If he can't be reached, a
+weighted pick from your ratings covers that turn. It replaces auto-rotate.
+
+The elves get the catalog too ("something the kids like", "which shows are
+cozy?").
+
 ## Ask the elves
 
 The **Elves** tab is a chat that runs on local Qwen 3 8B (nothing leaves

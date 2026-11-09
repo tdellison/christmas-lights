@@ -36,6 +36,13 @@ Govee LAN, ptReal and queue rules apply.
   (14 requests) runs in-app; keep it passing when changing prompts.
 - Effects get `ctx.yard` (0..1 position in the whole yard) besides the
   per-zone `pos`; `runner` uses it to cross zones.
+- Catalog / Watch / Director: `lib/catalog.js` (catalog.json: per look id
+  up/down, tags, notes, sniffed flavor from data/sniff), `lib/watch.js`
+  (plays each show N min, pauses rotate), `lib/director.js` (Qwen picks front
+  + back every N min; code enforces 👎 never, front/back-only, no repeats,
+  Govee only where d.mac known; weighted fallback if Qwen fails). The
+  compact catalog goes in the LAST message only (elves: only for show-ish
+  requests) to keep the prompt cache.
 - `lib/goveeCloud.js`: Govee Platform API (cloud) for Govee scenes + app
   DIYs, offered to the engine as `govee:<kind>:<name>` looks. While one plays
   the engine sends nothing. Key in `secrets.json`, never in git or the UI.
