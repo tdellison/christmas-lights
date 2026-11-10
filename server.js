@@ -153,6 +153,8 @@ app.post('/api/lights/identify', route(({ id }) => engine.identify(id)));
 app.post('/api/looks/apply', route(({ id, zone }) => engine.applyLook(id, zone)));
 // { name, off, schedule: { enabled, on, off } }
 app.post('/api/zones/:id', route((b, req) => engine.setZone(req.params.id, b)));
+app.post('/api/zones/:id/remove', route(({ to }, req) => engine.removeZone(req.params.id, to)));
+app.post('/api/zones-add', route((b) => engine.addZone(b)));
 app.post('/api/looks/save', route(({ name }) => engine.saveLook(name)));
 app.post('/api/looks/delete', route(({ id }) => engine.deleteLook(id)));
 app.post('/api/looks/next', route(() => engine.nextLook()));

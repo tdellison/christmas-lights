@@ -65,8 +65,10 @@ its two lights' spot settings.
 
 ## Zones
 
-The yard is split into **Front Left**, **Front Right** and **Backyard**
-(Setup: pick each pair's zone). **Front yard** means both front zones
+The yard is split into **Front Left** and **Front Right** (Setup: pick each
+pair's zone). The Backyard zone was dropped (the T-Rex Santa lights it); the
+Bluetooth pair is in Front Left. `POST /api/zones-add {id, name}` brings a
+zone back, `POST /api/zones/<id>/remove {to}` removes one. **Front yard** means both front zones
 together. Tap a zone under the yard picture (or its name above its lights)
 and the Lights and Looks tabs work on just that zone; **Whole yard** works on
 everything. Each zone has its own on/off switch and can have its own on/off
