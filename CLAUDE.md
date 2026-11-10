@@ -15,6 +15,9 @@ Govee LAN, ptReal and queue rules apply.
   zones. Effect groups are per zone. Govee scenes per zone need `d.mac`
   (from Scan → Use). The elves get the zone from the request words when
   Llama leaves it out (`zoneInText`).
+- `light.trim` (5-100, spot brightness): placement cap applied in frame()
+  after effect × bri; never saved in or applied from looks; during a Govee
+  scene the pair's LAN brightness = master × average trim.
 - `lib/effects.js`: `fx(ctx) -> {r,g,b}`. Keep effects pure functions of
   `ctx.t`. Per-light random state goes in `ctx.mem`.
 - `lib/llama.js` + `lib/assistant.js`: "Ask the elves" chat (Elves tab).

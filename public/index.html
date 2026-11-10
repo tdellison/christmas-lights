@@ -472,6 +472,8 @@
       <div class="row"><div class="grow"><label class="lbl">Colours (first = main colour)</label><div class="swatches" id="edColors"></div></div></div>
       <div class="row"><div class="grow"><label class="lbl">Brightness <b id="edBriVal"></b></label><input id="edBri" type="range" min="0" max="100"></div></div>
       <div class="row"><div class="grow"><label class="lbl">Speed <b id="edSpeedVal"></b></label><input id="edSpeed" type="range" min="0" max="100"></div></div>
+      <div class="row"><div class="grow"><label class="lbl">Spot brightness <span>kept for every show</span> <b id="edTrimVal"></b></label><input id="edTrim" type="range" min="5" max="100">
+        <p class="note">Caps this light wherever it stands (e.g. trees by the sidewalk). Shows and the Director never change it.</p></div></div>
       <div class="row actions">
         <button class="btn go" id="edOn">Turn on</button>
         <button class="btn" id="edOff">Turn off</button>
@@ -783,7 +785,7 @@ function renderLights() {
       <div class="dot" data-live="${esc(l.id)}" style="--idle:${esc(l.palette[0])}"></div>
       <div class="grow" data-pick="${esc(l.id)}">
         <div class="name">${esc(l.name)}</div>
-        <div class="meta">${l.on ? `${esc(effName(l.effect))} · ${l.bri}%` : 'off'}</div>
+        <div class="meta">${l.on ? `${esc(effName(l.effect))} · ${l.bri}%` : 'off'}${l.trim != null && l.trim < 100 ? ` · spot ${l.trim}%` : ''}</div>
       </div>
       <label class="switch"><input type="checkbox" data-on="${esc(l.id)}" ${l.on ? 'checked' : ''}><span></span></label>
     </div>`).join('');
@@ -812,6 +814,7 @@ function renderEditor() {
   if (relays.length) $('#edString').value = relays[0].string || '#ffb46b';
   $('#edBri').value = L.bri; $('#edBriVal').textContent = L.bri + '%';
   $('#edSpeed').value = fromSpeed(L.speed); $('#edSpeedVal').textContent = L.speed + '×';
+  $('#edTrim').value = L.trim ?? 100; $('#edTrimVal').textContent = (L.trim ?? 100) + '%';
 }
 
 function renderLooks() {
@@ -1085,7 +1088,9 @@ const sendBri = throttle((v) => patchSel({ bri: v }));
 $('#edBri').oninput = (e) => { editing = true; $('#edBriVal').textContent = e.target.value + '%'; sendBri(+e.target.value); };
 const sendSpeed = throttle((v) => patchSel({ speed: v }));
 $('#edSpeed').oninput = (e) => { editing = true; const s = toSpeed(+e.target.value); $('#edSpeedVal').textContent = s + '×'; sendSpeed(s); };
-['#edBri', '#edSpeed'].forEach(s => $(s).addEventListener('change', () => { editing = false; }));
+const sendTrim = throttle((v) => patchSel({ trim: v }));
+$('#edTrim').oninput = (e) => { editing = true; $('#edTrimVal').textContent = e.target.value + '%'; sendTrim(+e.target.value); };
+['#edBri', '#edSpeed', '#edTrim'].forEach(s => $(s).addEventListener('change', () => { editing = false; }));
 $('#edString').onchange = (e) => { const ids = targets().filter(id => { const l = S.lights.find(l => l.id === id) || {}; return l.relay || l.plug; }); if (ids.length) api('/api/lights', { ids, string: e.target.value }); };
 $('#edOn').onclick = () => patchSel({ on: true });
 $('#edOff').onclick = () => patchSel({ on: false });

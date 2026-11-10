@@ -54,6 +54,15 @@ The page installs to a home screen with its own icon and name.
 - **iPhone / iPad (Safari)**: Share → **Add to Home Screen**. Opens full
   screen.
 
+## Spot brightness
+
+Lights tab → tick a light → **Spot brightness** (or tell the elves "always
+keep the sidewalk trees a bit dimmer"). It caps that light for where it
+stands, in every show: our looks, saved and designed shows, the Director's
+picks. Shows never save or change it. During a Govee scene the app can only
+set a spotlight pair's overall brightness, so the pair uses the average of
+its two lights' spot settings.
+
 ## Zones
 
 The yard is split into **Front Left**, **Front Right** and **Backyard**
