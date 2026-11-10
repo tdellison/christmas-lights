@@ -893,7 +893,8 @@ function renderDevices() {
           ${d.kind === 'brmesh' || d.kind === 'relay' ? `<input type="text" value="${esc((d.kind === 'relay' ? d.ch : d.ble || []).join(', '))}" data-dnames aria-label="ESPHome names" title="${d.kind === 'relay' ? 'Relay channel names (one string group each)' : 'ESPHome light names'}" style="flex:1 1 150px;min-width:0;padding:8px 10px">` : ''}
           ${d.kind === 'plug' ? `<input type="text" value="${esc(d.tuyaId || '')}" data-dtid placeholder="Device ID" aria-label="Tuya device ID" style="flex:1 1 150px;min-width:0;padding:8px 10px">
             <input type="password" value="" data-dtkey placeholder="${d.hasKey ? 'Local key saved' : 'Local key'}" aria-label="Tuya local key" autocomplete="off" style="flex:1 1 120px;min-width:0;padding:8px 10px">
-            <select data-dtver aria-label="Protocol" style="width:auto;padding:8px">${['3.3', '3.4', '3.5', '3.1'].map(v => `<option ${v === (d.tuyaVersion || '3.3') ? 'selected' : ''}>${v}</option>`).join('')}</select>` : ''}
+            <select data-dtver aria-label="Protocol" style="width:auto;padding:8px">${['3.3', '3.4', '3.5', '3.1'].map(v => `<option ${v === (d.tuyaVersion || '3.3') ? 'selected' : ''}>${v}</option>`).join('')}</select>
+            <input type="text" value="${esc(d.about || '')}" data-dabout placeholder="What it powers (for Qwen), e.g. laser projector: red &amp; green dots" aria-label="What it powers" style="flex:1 1 100%;min-width:0;padding:8px 10px">` : ''}
           ${d.kind === 'brmesh' || d.kind === 'relay' || d.kind === 'plug' ? '' : `<select data-dsegs aria-label="Lights on it">${[1,2,3,4].map(k => `<option value="${k}" ${k === d.segments ? 'selected' : ''}>${k === 2 ? '2 lights' : k === 1 ? '1 light' : k + ' lights'}</option>`).join('')}</select>`}
           <button class="btn small" data-dsave>Save</button>
           <button class="btn small" data-dprobe ${d.ip ? '' : 'disabled'}>Test</button>
@@ -998,7 +999,7 @@ function renderDirector() {
   if (document.activeElement !== $('#dirMin')) $('#dirMin').value = d.minutes;
   $('#dirNow').disabled = !d.enabled || d.thinking;
   $('#dirNow').textContent = d.thinking ? 'Thinking…' : 'Pick now';
-  $('#dirRecent').innerHTML = d.recent.map(r => `<div class="tl"><div class="grow"><b>${esc(r.name)}</b> ${r.area === 'back' ? 'out back' : 'out front'}<small>${esc(r.by === 'Qwen' ? r.why : 'picked from your ratings (Qwen unavailable)')} · ${new Date(r.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</small></div></div>`).join('')
+  $('#dirRecent').innerHTML = d.recent.map(r => `<div class="tl"><div class="grow"><b>${esc(r.name)}</b> ${r.area === 'back' ? 'out back' : 'out front'}<small>${esc(r.by === 'Qwen' ? r.why : 'picked from your ratings (Qwen unavailable)')} · ${new Date(r.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</small>${r.plugs ? `<small>${esc(r.plugs.join(' · '))}</small>` : ''}</div></div>`).join('')
     + (d.enabled && d.nextAt ? `<p class="note">Next pick around ${new Date(d.nextAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.</p>` : d.enabled && !(S && S.running) ? '<p class="note">Starts when the lights are on.</p>' : '');
 }
 function renderWatch() {
@@ -1166,7 +1167,7 @@ $('#devices').addEventListener('click', async (e) => {
   if (e.target.matches('[data-dsave]')) {
     e.target.blur();
     const names = box.querySelector('[data-dnames]'), kind = (S.devices.find(d => d.id === id) || {}).kind;
-    const extra = kind === 'plug' ? { tuyaId: box.querySelector('[data-dtid]').value, tuyaKey: box.querySelector('[data-dtkey]').value, tuyaVersion: box.querySelector('[data-dtver]').value }
+    const extra = kind === 'plug' ? { tuyaId: box.querySelector('[data-dtid]').value, tuyaKey: box.querySelector('[data-dtkey]').value, tuyaVersion: box.querySelector('[data-dtver]').value, about: box.querySelector('[data-dabout]').value }
       : names ? { [kind === 'relay' ? 'ch' : 'ble']: names.value } : { segments: +box.querySelector('[data-dsegs]').value };
     api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, ...extra });
   }

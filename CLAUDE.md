@@ -64,7 +64,11 @@ Govee LAN, ptReal and queue rules apply.
   min 4 s between switches, newest wish wins. `tuyaKey` is redacted from
   status (`hasKey`). `light.blink` (s, ≥10) blinks it until tonight's
   click budget (600, `tuya.clicksLeft`) runs out; Qwen sets it (elves
-  `set.blink`, Director `plugBlink` per pick).
+  `set.blink`). Plugs have `about` (what they power). Director step 2
+  (`askPlugs`): Qwen judges each plug's `fit` against the picked show's
+  colours, code turns clash→off / fit→on and paces blink so the budget
+  lasts to the schedule's off time. Elves switch plugs named/described in
+  the request in code ("turn off the laser dots").
 - `public/index.html`: single-file phone UI over a WebSocket.
 
 Rules:

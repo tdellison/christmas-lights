@@ -145,6 +145,14 @@ picks, its designs can include it, and the elves will do it on request
 ("make the C9s blink slowly"). Once tonight's clicks are used, the C9s stay
 steady until tomorrow.
 
+**More plugs** (e.g. a laser projector): add each as its own smart plug and
+fill in **What it powers** ("laser projector: red & green dots on the house").
+For every show it picks, the Director judges whether each plug fits the
+show's colours: the projector goes off for blue/white shows and on for
+red/green ones; plain strings stay on (blinking only when he chooses, paced
+to last the night). The elves switch them by name ("turn off the laser
+dots").
+
 ## Govee scenes and DIYs
 
 **Setup → Govee account**: paste the API key from the Govee app (Profile →
