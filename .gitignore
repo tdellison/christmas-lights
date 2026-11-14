@@ -9,3 +9,5 @@ sandbox.json
 data/
 catalog.json
 director.json
+*.save
+*.bak
