@@ -94,7 +94,11 @@ component and the app sends it colours over Wi-Fi.
    The same logcat output shows the id when you toggle each light.
 3. Copy `deploy/secrets.example.yaml` to `deploy/secrets.yaml`, fill in Wi-Fi
    and the mesh key, set the `light_id`s in `deploy/esp32-brmesh.yaml`.
-4. Flash: plug the ESP32 into the server, `esphome run deploy/esp32-brmesh.yaml`.
+4. Flash: plug the ESP32 into the server, run `sudo bash deploy/setup-esp32.sh`
+   (Wi-Fi + USB access), then `esphome run deploy/esp32-brmesh.yaml`. ESPHome
+   lives in `~/.local/share/esphome-venv`. If the fast upload fails ("stub
+   flasher"), flash at 115200 with esptool (this board needed it).
+   Flashed 2026-11-14: brmesh-bridge at 192.168.1.192 (reserve it in the router).
 5. App: **Setup → + Add Bluetooth pair**, type the ESP32's IP, Save, Test.
 
 Bluetooth lights update about 3-4 times a second (BLE drops commands if
