@@ -98,7 +98,8 @@ component and the app sends it colours over Wi-Fi.
    (Wi-Fi + USB access), then `esphome run deploy/esp32-brmesh.yaml`. ESPHome
    lives in `~/.local/share/esphome-venv`. If the fast upload fails ("stub
    flasher"), flash at 115200 with esptool (this board needed it).
-   Flashed 2026-11-14: brmesh-bridge at 192.168.1.192 (reserve it in the router).
+   Flashed 2026-11-14: brmesh-bridge, fixed at 192.168.1.50 (set in the YAML,
+   below the router's DHCP range).
 5. App: **Setup → + Add Bluetooth pair**, type the ESP32's IP, Save, Test.
 
 Bluetooth lights update about 3-4 times a second (BLE drops commands if
