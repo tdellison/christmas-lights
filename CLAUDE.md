@@ -21,8 +21,9 @@ Govee LAN, ptReal and queue rules apply.
 - `lib/effects.js`: `fx(ctx) -> {r,g,b}`. Keep effects pure functions of
   `ctx.t`. Per-light random state goes in `ctx.mem`.
 - `lib/llama.js` + `lib/assistant.js`: "Ask the elves" chat (Elves tab).
-  Local Qwen 3 8B (Ollama, `think: false`, CPU, ~60 tok/s reading, ~5 tok/s
-  writing); chosen over Llama 3.1 8B by a scored 14-request test. Code
+  Local Qwen 3 30B-A3B instruct-2507 (Ollama, MoE ~3B active, ~18 GB RAM, CPU);
+  chosen by the scored 14-request test over Qwen 3 8B, Qwen 3.5 9B and Llama
+  3.1 8B (14/14, ~2x faster than the 8B). Re-run the test before any swap. Code
   strips unasked speed/brightness/save from plain commands.
   Llama only returns `{actions:[]}` (schema-enforced, ids are enums); the app
   runs them and writes the reply. Designs ("surprise me", "design ... called

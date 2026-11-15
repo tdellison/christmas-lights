@@ -189,7 +189,7 @@ cozy?").
 
 ## Ask the elves
 
-The **Elves** tab is a chat that runs on local Qwen 3 8B (nothing leaves
+The **Elves** tab is a chat that runs on local Qwen 3 30B-A3B (nothing leaves
 the house). The box on the Lights tab sends to it too.
 
 - **Commands**: "candy cane out front, warm twinkle out back", "slower",
