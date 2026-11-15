@@ -1,0 +1,307 @@
+#include <algorithm>
+#include "esphome/core/log.h"
+#include "fastcon_light.h"
+#include "fastcon_controller.h"
+#include "utils.h"
+
+namespace esphome
+{
+    namespace fastcon
+    {
+        static const char *const TAG = "fastcon.light";
+
+        void FastconLight::setup()
+        {
+            if (this->controller_ == nullptr)
+            {
+                ESP_LOGE(TAG, "Controller not set for light %d!", this->light_id_);
+                this->mark_failed();
+                return;
+            }
+            if (this->is_group_)
+            {
+                ESP_LOGCONFIG(TAG, "Setting up Fastcon BLE group light (group: %u, members: %u)...", this->group_id_,
+                              (unsigned) this->get_members_().size());
+                return;
+            }
+            ESP_LOGCONFIG(TAG, "Setting up Fastcon BLE light (ID: %d)...", this->light_id_);
+        }
+
+        void FastconLight::set_controller(FastconController *controller)
+        {
+            this->controller_ = controller;
+        }
+
+        void FastconLight::add_member(light::LightState *member)
+        {
+            // Config validation guarantees members are single-bulb fastcon lights
+            this->members_.push_back(static_cast<FastconLight *>(member->get_output()));
+        }
+
+        void FastconLight::assign_members()
+        {
+            if (this->group_id_ == 0)
+            {
+                ESP_LOGW(TAG, "Group 0 already reaches every bulb, nothing to assign");
+                return;
+            }
+            if (this->members_.empty())
+            {
+                ESP_LOGW(TAG, "Group %u has no members to assign", this->group_id_);
+                return;
+            }
+            for (auto *member : this->members_)
+                this->controller_->send_set_group(member->get_light_id(), this->group_id_);
+        }
+
+        const std::vector<FastconLight *> &FastconLight::get_members_() const
+        {
+            if (this->members_.empty() && this->group_id_ == 0)
+                return this->controller_->get_lights();
+            return this->members_;
+        }
+
+        std::vector<uint8_t> FastconLight::get_member_ids_() const
+        {
+            const auto &members = this->get_members_();
+            std::vector<uint8_t> member_ids;
+            member_ids.reserve(members.size());
+            for (auto *member : members)
+                member_ids.push_back(member->get_light_id());
+            return member_ids;
+        }
+
+        void FastconLight::start_scene(const FastconScene *scene)
+        {
+            this->scene_ = scene;
+            if (this->boot_write_pending_)
+            {
+                // ESPHome restoring the group entity's effect at boot. Like the restored state, it isn't
+                // broadcast: the bulbs keep doing what they were doing (still running it, if only the
+                // controller restarted), and steady-color writes stay held back until the effect stops.
+                this->scene_sent_ = true;
+                ESP_LOGD(TAG, "Group %u: not sending the restored effect at boot", this->group_id_);
+                return;
+            }
+            this->send_scene_();
+        }
+
+        void FastconLight::stop_scene(const FastconScene *scene)
+        {
+            if (this->scene_ != scene)
+                return;
+            // Nothing to send here. ESPHome writes the state right after stopping an effect (also when
+            // only the effect changed), and with no effect selected that write sends the steady color,
+            // which ends the effect on the bulbs.
+            this->scene_ = nullptr;
+            ESP_LOGD(TAG, "Group %u: effect stopped", this->group_id_);
+        }
+
+        void FastconLight::send_scene_()
+        {
+            this->controller_->send_group_scene(this->group_id_, this->scene_->flash, this->scene_->speed,
+                                                this->scene_->steps, this->get_member_ids_());
+            this->scene_sent_ = true;
+        }
+
+        light::LightTraits FastconLight::get_traits()
+        {
+            auto traits = light::LightTraits();
+            const bool color_temperature = this->supports_white_ && this->supports_color_temperature_;
+            // No plain BRIGHTNESS mode next to color modes: Home Assistant doesn't allow mixing them,
+            // and rejects a state reported in brightness mode, so the entity snaps back to off.
+            if (this->supports_rgb_ && color_temperature)
+            {
+                traits.set_supported_color_modes({light::ColorMode::RGB, light::ColorMode::WHITE, light::ColorMode::COLD_WARM_WHITE});
+            }
+            else if (this->supports_rgb_ && this->supports_white_)
+            {
+                // RGB plus a single white (the white mode payload), without color temperature
+                traits.set_supported_color_modes({light::ColorMode::RGB, light::ColorMode::WHITE});
+            }
+            else if (this->supports_rgb_)
+            {
+                // RGB-only bulbs: no white LEDs, so white comes from the RGB channels
+                traits.set_supported_color_modes({light::ColorMode::RGB});
+            }
+            else if (color_temperature)
+            {
+                // White-only (cold/warm) bulbs
+                traits.set_supported_color_modes({light::ColorMode::COLD_WARM_WHITE});
+            }
+            else if (this->supports_white_)
+            {
+                traits.set_supported_color_modes({light::ColorMode::WHITE});
+            }
+            else
+            {
+                traits.set_supported_color_modes({light::ColorMode::BRIGHTNESS});
+            }
+            if (color_temperature)
+            {
+                traits.set_min_mireds(153);
+                traits.set_max_mireds(500);
+            }
+            return traits;
+        }
+
+        // The brightness and color bytes of a full command, without the on/off bit
+        static std::vector<uint8_t> shown_bytes(const std::vector<uint8_t> &light_data)
+        {
+            std::vector<uint8_t> shown = light_data;
+            shown[0] &= 0x7F;
+            return shown;
+        }
+
+        void FastconLight::remember_shown_(const light::LightColorValues &values)
+        {
+            auto on_values = values;
+            on_values.set_state(true);
+            const auto full = this->controller_->get_light_data(on_values);
+            if (full.size() == 6)
+                this->shown_ = shown_bytes(full);
+            else
+                this->shown_.clear();
+        }
+
+        std::vector<uint8_t> FastconLight::drop_unchanged_color_(const std::vector<uint8_t> &light_data, bool resent)
+        {
+            if (light_data.size() != 6)
+                return light_data;
+            auto shown = shown_bytes(light_data);
+            if (shown == this->shown_ && !resent)
+                return {light_data[0]};
+            this->shown_ = std::move(shown);
+            return light_data;
+        }
+
+        void FastconLight::mirror(const light::LightColorValues &values, const std::vector<uint8_t> &light_data)
+        {
+            if (this->state_ == nullptr)
+                return;
+            this->mirrored_data_ = light_data;
+            auto call = this->state_->make_call();
+            if (light_data.size() == 6)
+            {
+                // The group command set a color and brightness, so the bulb shows them now
+                this->shown_ = shown_bytes(light_data);
+                call.from_light_color_values(values);
+            }
+            else
+            {
+                // A plain on/off: the bulb kept its own color, so the entity keeps its color too. A group
+                // "on" carries the group's brightness, which the bulb now has.
+                if (values.is_on() && !this->shown_.empty())
+                    this->shown_[0] = light_data[0] & 0x7F;
+                call.set_state(values.is_on());
+                if (values.is_on())
+                    call.set_brightness(values.get_brightness());
+            }
+            call.set_transition_length(0);
+            call.perform();
+        }
+
+        void FastconLight::write_state(light::LightState *state)
+        {
+            const auto &values = state->current_values;
+            auto light_data = this->controller_->get_light_data(values);
+
+            // ESPHome writes on every request, even one that changes nothing. Such a write can only be an
+            // explicit resend (e.g. picking the color the light already has), so it sends the full color.
+            const bool resent = !this->last_written_.empty() && light_data == this->last_written_;
+            this->last_written_ = light_data;
+
+            if (this->baseline_pending_)
+            {
+                // The first write is ESPHome restoring the saved state at boot. Its color and brightness are
+                // taken as what the bulb already shows (even when restored as off), so a plain "turn on"
+                // later keeps them.
+                this->baseline_pending_ = false;
+                this->remember_shown_(values);
+            }
+
+            if (this->is_group_)
+            {
+                if (this->boot_write_pending_)
+                {
+                    // The first write is ESPHome restoring the group entity's state at boot. Broadcasting
+                    // it would override every member bulb's own restored state, so only the entity is restored.
+                    this->boot_write_pending_ = false;
+                    ESP_LOGD(TAG, "Group %u: not sending the restored boot state", this->group_id_);
+                    return;
+                }
+
+                if (this->scene_ != nullptr && state->remote_values.is_on())
+                {
+                    if (this->scene_sent_)
+                    {
+                        // The bulbs run the effect by themselves, and a steady-color command would end it
+                        ESP_LOGV(TAG, "Group %u: effect running, steady color not sent", this->group_id_);
+                        return;
+                    }
+                    // Turned back on after an off that left the effect selected (e.g. brightness 0): restart it
+                    this->send_scene_();
+                    return;
+                }
+                // Anything else (no effect, or turning off) goes out, and ends an effect on the bulbs.
+                // The steady color after an effect has to go out in full: a short "on" wouldn't end it.
+                if (this->scene_sent_)
+                    this->shown_.clear();
+                this->scene_sent_ = false;
+
+                // One broadcast for every bulb in the group
+                const auto sent = this->drop_unchanged_color_(light_data, resent);
+                this->controller_->send_group(this->group_id_, sent, this->get_member_ids_());
+
+                const auto &members = this->get_members_();
+
+                // Show the result on the members' entities. Only the end state of a transition is
+                // mirrored, so members don't each run (and send) the intermediate steps.
+                if (state->current_values == state->remote_values)
+                {
+                    for (auto *member : members)
+                        member->mirror(state->remote_values, sent);
+                }
+                return;
+            }
+
+            if (!this->mirrored_data_.empty())
+            {
+                // A group command already reached the bulb, so don't send it again. A short group command
+                // (on/off or brightness) leaves the bulb's color alone, so only that byte has to match.
+                // Anything different (a real change since the mirror) still goes out.
+                const bool already_delivered = this->mirrored_data_.size() == 1
+                                                   ? light_data[0] == this->mirrored_data_[0]
+                                                   : light_data == this->mirrored_data_;
+                this->mirrored_data_.clear();
+                if (already_delivered)
+                {
+                    ESP_LOGV(TAG, "Light %d: state set by a group command, nothing to send", light_id_);
+                    return;
+                }
+            }
+
+            light_data = this->drop_unchanged_color_(light_data, resent);
+
+            // One short line per change; the full payload dumps are verbose-only
+            bool is_on = (light_data[0] & 0x80) != 0;
+            float brightness = ((light_data[0] & 0x7F) / 127.0f) * 100.0f;
+            if (light_data.size() == 1)
+            {
+                ESP_LOGD(TAG, "Light %d: on=%d, brightness=%.0f%%", light_id_, is_on, brightness);
+            }
+            else
+            {
+                ESP_LOGD(TAG, "Light %d: on=%d, brightness=%.0f%%, rgb=(%d,%d,%d), warm=%d, cold=%d", light_id_, is_on, brightness,
+                         light_data[2], light_data[3], light_data[1], light_data[4], light_data[5]);
+            }
+
+            // Generate the advertisement payload
+            auto adv_data = this->controller_->single_control(this->light_id_, light_data);
+            ESP_LOGV(TAG, "Advertisement Payload (%u bytes): %s", (unsigned) adv_data.size(), vector_to_hex_string(adv_data).c_str());
+
+            // Send the advertisement
+            this->controller_->queueCommand(this->light_id_, adv_data);
+        }
+    } // namespace fastcon
+} // namespace esphome

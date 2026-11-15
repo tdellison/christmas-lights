@@ -22,6 +22,10 @@ esp32:
   board: esp32dev          # change to your board (e.g. esp32-s3-devkitc-1)
   framework:
     type: arduino
+    sdkconfig_options:
+      # Bluetooth at full transmit power (+9 dBm) for reach through the window.
+      CONFIG_BT_CTRL_DFT_TX_POWER_LEVEL_P9: 'y'
+      CONFIG_BT_CTRL_DFT_TX_POWER_LEVEL_EFF: '11'
     # Flash these boards at 115200 baud (see README): at the default 460800
     # the first flash failed, and esptool misreported the crystal as 26 MHz.
 
@@ -54,11 +58,18 @@ web_server:
 esp32_ble_tracker:
 esp32_ble_server:
 
+# Local copy of dennispg/esphome-fastcon with one fix (advert length +3, see
+# components/fastcon/fastcon_controller.cpp).
 external_components:
-  - source: github://dennispg/esphome-fastcon@main
+  - source:
+      type: local
+      path: components
 
 fastcon:
   mesh_key: !secret brmesh_mesh_key
+  # Repeat each command for 400 ms (default 50) so lights don't miss it.
+  adv_duration: 400
+  adv_gap: 20
 
 light:
   - platform: fastcon

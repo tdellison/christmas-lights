@@ -878,8 +878,8 @@ function renderDevices() {
   if (!focused) {
     box.innerHTML = S.devices.length ? S.devices.map(d => {
       const lights = S.lights.filter(l => l.device === d.id);
-      const what = d.kind === 'brmesh' ? 'ESP32 Bluetooth bridge' : d.kind === 'relay' ? `ESP32 relays · ${d.ch.length} channels` : d.kind === 'plug' ? `Smart plug · on/off only${d.hasKey ? '' : ' · needs local key'}` : (d.sku || 'Govee');
-      const state = !d.ip ? '<span class="state empty">No IP yet · preview only</span>'
+      const what = d.kind === 'brmesh' ? (d.via === 'server' ? 'Server Bluetooth (TP-Link)' : 'ESP32 Bluetooth bridge') : d.kind === 'relay' ? `ESP32 relays · ${d.ch.length} channels` : d.kind === 'plug' ? `Smart plug · on/off only${d.hasKey ? '' : ' · needs local key'}` : (d.sku || 'Govee');
+      const state = !d.ip && d.via !== 'server' ? '<span class="state empty">No IP yet · preview only</span>'
         : d.lastSeen ? `<span class="state ok">${esc(what)} · ${ago(d.lastSeen)}</span>`
         : `<span class="state">${esc(what)} · ${ago(d.lastSeen)}</span>`;
       return `
@@ -890,6 +890,7 @@ function renderDevices() {
           ${d.kind === 'brmesh' ? '<span class="badge bt">BT</span>' : d.kind === 'relay' ? '<span class="badge c9">C9</span>' : d.kind === 'plug' ? '<span class="badge c9">PLUG</span>' : ''}<span class="badge ${d.ip ? 'ok' : ''}">${d.ip ? 'set' : 'empty'}</span></div>
         <div class="ipline">
           <input type="text" inputmode="decimal" placeholder="${d.kind === 'brmesh' || d.kind === 'relay' ? 'ESP32 IP' : d.kind === 'plug' ? 'Plug IP' : 'IP, e.g. 192.168.1.50'}" value="${esc(d.ip)}" data-dip aria-label="IP">
+          ${d.kind === 'brmesh' ? `<select data-dvia aria-label="Send via" style="width:auto;padding:8px"><option value="server" ${d.via === 'server' ? 'selected' : ''}>via server Bluetooth</option><option value="esp32" ${d.via !== 'server' ? 'selected' : ''}>via ESP32</option></select>` : ''}
           ${d.kind === 'brmesh' || d.kind === 'relay' ? `<input type="text" value="${esc((d.kind === 'relay' ? d.ch : d.ble || []).join(', '))}" data-dnames aria-label="ESPHome names" title="${d.kind === 'relay' ? 'Relay channel names (one string group each)' : 'ESPHome light names'}" style="flex:1 1 150px;min-width:0;padding:8px 10px">` : ''}
           ${d.kind === 'plug' ? `<input type="text" value="${esc(d.tuyaId || '')}" data-dtid placeholder="Device ID" aria-label="Tuya device ID" style="flex:1 1 150px;min-width:0;padding:8px 10px">
             <input type="password" value="" data-dtkey placeholder="${d.hasKey ? 'Local key saved' : 'Local key'}" aria-label="Tuya local key" autocomplete="off" style="flex:1 1 120px;min-width:0;padding:8px 10px">
@@ -1169,7 +1170,8 @@ $('#devices').addEventListener('click', async (e) => {
     const names = box.querySelector('[data-dnames]'), kind = (S.devices.find(d => d.id === id) || {}).kind;
     const extra = kind === 'plug' ? { tuyaId: box.querySelector('[data-dtid]').value, tuyaKey: box.querySelector('[data-dtkey]').value, tuyaVersion: box.querySelector('[data-dtver]').value, about: box.querySelector('[data-dabout]').value }
       : names ? { [kind === 'relay' ? 'ch' : 'ble']: names.value } : { segments: +box.querySelector('[data-dsegs]').value };
-    api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, ...extra });
+    const via = box.querySelector('[data-dvia]');
+    api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, ...extra, ...(via ? { via: via.value } : {}) });
   }
   if (e.target.matches('[data-ddel]') && confirm('Remove this pair and its lights?')) api(`/api/devices/${id}`, null, 'DELETE');
   if (e.target.matches('[data-dprobe]')) { e.target.textContent = '…'; const r = await api(`/api/devices/${id}/probe`); e.target.textContent = 'Test'; if (r) toast(r.status.plug ? `Plug answered: ${r.status.plug.on ? 'on' : 'off'}` : r.status.esp ? (r.status.ok ? 'ESP32 answered for every channel' : `ESP32: ${r.status.error}`) : r.status.ok ? `Answered: ${r.status.status.onOff ? 'on' : 'off'}, brightness ${r.status.status.brightness}` : 'No answer — check the IP and LAN Control'); }

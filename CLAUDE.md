@@ -59,6 +59,12 @@ Govee LAN, ptReal and queue rules apply.
   names, `deploy/esp32-relays.yaml`). Relay lights run effects on
   white/black and are on when bright; `light.string` is preview colour only.
   One command per entity per gap (lights 250 ms, switches 100 ms), none in flight.
+- `lib/blelocal.js`: BRMesh lights from the server's TP-Link adapter (hci by
+  address 58:D8:12:36:D0:B5) via `hcitool cmd` legacy advertising (hcitool
+  has setcap). Device `brmesh` with `via: 'server'` (no ip). Every command is
+  sent at seq s and s+128 (lights accept only "newer" seq mod 256, shared
+  with the BRMesh app); seq persisted in ble-seq.json. Newest wish per light,
+  ~150 ms per advert. The ESP32 path failed without its antenna.
 - `lib/tuya.js`: Tuya smart plugs via `tuyapi` (local). Device `kind: plug`,
   one light, on/off only (follows light.on + zone + show, ignores effects);
   min 4 s between switches, newest wish wins. `tuyaKey` is redacted from

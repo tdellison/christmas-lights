@@ -15,6 +15,7 @@ const { createLlama } = require('./lib/llama');
 const { createGoveeCloud } = require('./lib/goveeCloud');
 const { createEsphome } = require('./lib/esphome');
 const { createTuya } = require('./lib/tuya');
+const { createBleLocal } = require('./lib/blelocal');
 const { createAssistant } = require('./lib/assistant');
 const { createTraining } = require('./lib/training');
 const { createCatalog } = require('./lib/catalog');
@@ -63,7 +64,10 @@ const sendStatus = () => engine && broadcast({ type: 'status', data: engine.stat
 const cloud = createGoveeCloud({ file: SECRETS, log, onChange: () => { sendStatus(); broadcast({ type: 'cloud', data: cloud.status() }); } });
 const esphome = createEsphome({ log });
 const tuya = createTuya({ log });
-engine = createEngine({ file: DATA, govee, esphome, tuya, log, onChange: sendStatus, external: { looks: () => cloud.looks(), play: (k, macs) => cloud.play(k, macs), power: (on) => cloud.power(on) } });
+// BRMesh lights from the server's TP-Link Bluetooth; mesh key from deploy/secrets.yaml.
+const meshKey = (() => { try { return (/^brmesh_mesh_key:\s*"?([0-9a-fA-F]{8})/m.exec(fs.readFileSync(path.join(__dirname, 'deploy', 'secrets.yaml'), 'utf8')) || [])[1]; } catch (_) { return null; } })();
+const bleLocal = createBleLocal({ key: meshKey, seqFile: path.join(__dirname, 'ble-seq.json'), log });
+engine = createEngine({ file: DATA, govee, esphome, tuya, bleLocal, log, onChange: sendStatus, external: { looks: () => cloud.looks(), play: (k, macs) => cloud.play(k, macs), power: (on) => cloud.power(on) } });
 
 // Ask the elves: plain-English commands through local Llama.
 const aiState = () => ({ ...llama.status(), history: assistant.history() });

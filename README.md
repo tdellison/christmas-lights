@@ -81,30 +81,22 @@ are in it: add them with **Scan → Use** (that records their hardware id).
 
 ## Bluetooth lights (BRMesh app)
 
-BRMesh lights only talk Bluetooth, so an ESP32 does the talking. It runs
-ESPHome with the [esphome-fastcon](https://github.com/dennispg/esphome-fastcon)
-component and the app sends it colours over Wi-Fi.
+The two BRMesh lights are driven **from the server's TP-Link USB Bluetooth
+adapter** (Setup → Bluetooth pair → "via server Bluetooth"). An ESP32
+bridge (`deploy/esp32-brmesh.yaml`, flashed, static 192.168.1.50) also works
+but needs its antenna to reach; it's the spare option ("via ESP32").
 
-1. **Mesh key**: set the lights up in the BRMesh app on an **Android** phone,
-   plug the phone into the server, turn on USB debugging, and run
-   (then toggle a light in the app):
-   `adb logcat | grep -m 1 -o 'jyq_helper: .* payload:.\{24\},[[:space:]]*key:[[:space:]]*.\{8\}' | awk '{print $NF}'`
-   It prints 8 hex characters.
-2. **Light ids**: usually 1 and 2 for the first two lights added in the app.
-   The same logcat output shows the id when you toggle each light.
-3. Copy `deploy/secrets.example.yaml` to `deploy/secrets.yaml`, fill in Wi-Fi
-   and the mesh key, set the `light_id`s in `deploy/esp32-brmesh.yaml`.
-4. Flash: plug the ESP32 into the server, run `sudo bash deploy/setup-esp32.sh`
-   (Wi-Fi + USB access), then `esphome run deploy/esp32-brmesh.yaml`. ESPHome
-   lives in `~/.local/share/esphome-venv`. If the fast upload fails ("stub
-   flasher"), flash at 115200 with esptool (this board needed it).
-   Flashed 2026-11-14: brmesh-bridge, fixed at 192.168.1.50 (set in the YAML,
-   below the router's DHCP range).
-5. App: **Setup → + Add Bluetooth pair**, type the ESP32's IP, Save, Test.
+How it works: the app builds the FastCon adverts itself (`tools/fastcon.js`,
+mesh key from `deploy/secrets.yaml`) and sends them with raw HCI legacy
+advertising via `hcitool` (`lib/blelocal.js`). The lights ignore a message
+unless its sequence number is newer (mod 256) than the last they accepted,
+and the BRMesh app shares that counter, so every command goes out twice,
+half the counter apart. Each light updates ~2-3 times a second.
 
-Bluetooth lights update about 3-4 times a second (BLE drops commands if
-spammed), so fast chases look steppier on them than on the Govee lights.
-They keep running the app's effects while a Govee cloud scene plays.
+One-time setup on a new server: `sudo setcap cap_net_raw,cap_net_admin+eip /usr/bin/hcitool`.
+The mesh key and light ids come from the BRMesh app on Android via
+`adb logcat` (look for `jyq_helper ... key:`; light ids are 1 and 2).
+Test script: `deploy/test-tplink-seq.sh` (sweeps all sequence numbers).
 
 ## C9 strings on relays
 
