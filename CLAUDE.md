@@ -18,6 +18,12 @@ Govee LAN, ptReal and queue rules apply.
 - `light.trim` (5-100, spot brightness): placement cap applied in frame()
   after effect × bri; never saved in or applied from looks; during a Govee
   scene the pair's LAN brightness = master × average trim.
+- Evening polish: `lib/sun.js` (NOAA sunset; schedule.on may be 'sunset' +
+  sunsetOffset, cfg.location lat/lon), engine fades (per-light crossfade
+  FADE_MS on effect/palette/on changes, showFade in at start/out at stop;
+  stop() fades then stopNow()), `lib/health.js` (probes devices every 2 min
+  while running, alert after 2 misses), `lib/occasion.js` (special nights +
+  Open-Meteo snow, one line in the Director's prompt).
 - `lib/effects.js`: `fx(ctx) -> {r,g,b}`. Keep effects pure functions of
   `ctx.t`. Per-light random state goes in `ctx.mem`.
 - `lib/llama.js` + `lib/assistant.js`: "Ask the elves" chat (Elves tab).

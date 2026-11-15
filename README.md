@@ -54,6 +54,21 @@ The page installs to a home screen with its own icon and name.
 - **iPhone / iPad (Safari)**: Share → **Add to Home Screen**. Opens full
   screen.
 
+## Evening polish
+
+- **Sunset start**: Looks → Schedule → tick **at sunset** (with an offset,
+  e.g. -10 for ten minutes before). Uses the location under it (Denver by
+  default; set your latitude/longitude, e.g. from Google Maps).
+- **Fades**: shows fade in over 3 s when they start, out over 3 s when they
+  stop, and each light crossfades ~2.5 s when its look changes.
+- **Offline alerts**: while the show is on, every 2 minutes the app checks
+  each light that has an address; after two misses a red banner says which
+  one isn't answering (and a phone notification if the app is open and
+  notifications are allowed).
+- **Special nights and snow**: the Director knows Christmas Eve, Christmas
+  Day, New Year's Eve and the countdown days, and whether it's snowing
+  (Open-Meteo, free, no account), and plays to it.
+
 ## Spot brightness
 
 Lights tab → tick a light → **Spot brightness** (or tell the elves "always

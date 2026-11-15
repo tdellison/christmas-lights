@@ -263,6 +263,12 @@
   .watch .wtags button { font-size: 14px; padding: 7px 12px; border-radius: 999px; border: 1px solid #2b6a4a; background: #0f3626; color: var(--text); }
   .watch .wtags button.on { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
   .watch #wNotes div { padding: 3px 0; }
+  .alertbar { max-width: 720px; margin: 6px auto 0; padding: 0 16px; position: relative; z-index: 3; }
+  .alertbar:empty { display: none; }
+  .alertbar .al { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 6px; border-radius: 12px;
+    background: rgba(227,55,63,.18); border: 1px solid rgba(227,55,63,.6); color: #ffd7d9; font-size: 14px; }
+  .alertbar .al b { color: #fff; }
+  .alertbar .al button { margin-left: auto; background: none; border: 1px solid rgba(255,255,255,.3); color: #fff; border-radius: 8px; padding: 3px 9px; }
   .askmini form { display: flex; gap: 8px; }
   .askmini input { flex: 1; min-width: 0; }
   .askmini { padding: 12px 14px; }
@@ -433,6 +439,7 @@
   </div>
 </div>
 
+<div class="alertbar" id="alertbar"></div>
 <div class="zonebar">
   <div class="zchips" id="zchips"></div>
   <div class="zinfo" id="zinfo"></div>
@@ -522,6 +529,7 @@
         <div class="grow">Let Qwen pick the shows every <input id="dirMin" type="number" min="1" max="120" style="width:70px;display:inline-block"> min</div>
         <label class="switch"><input id="dirOn" type="checkbox"><span></span></label>
       </div>
+      <p class="note" id="dirTonight" style="color:var(--warm)"></p>
       <p class="note" id="dirNote">He chooses front and back from your 👍/👎, tags and notes (rate shows in Watch &amp; rate), the time of night and what he played lately. Never a 👎 show.</p>
       <div id="dirRecent"></div>
       <div class="row" style="margin-top:8px"><button class="btn" id="dirNow">Pick now</button></div>
@@ -546,10 +554,17 @@
         <label class="switch"><input id="schOn" type="checkbox"><span></span></label>
       </div>
       <div class="grid2" style="margin-top:10px">
-        <div><label class="lbl">On at</label><input id="schStart" type="time"></div>
+        <div><label class="lbl">On at</label><input id="schStart" type="time">
+          <label class="lbl" style="margin-top:6px;justify-content:flex-start;gap:6px"><input type="checkbox" id="schSunset" class="check" style="width:20px;height:20px"> at sunset <input id="schOffset" type="number" min="-120" max="120" step="5" style="width:70px;padding:4px 6px"> min</label></div>
         <div><label class="lbl">Off at</label><input id="schEnd" type="time"></div>
       </div>
       <p class="note" id="schTz"></p>
+      <div class="row" style="margin-top:6px;flex-wrap:wrap">
+        <div class="grow note" style="margin:0" id="locNote"></div>
+        <input id="locLat" type="number" step="0.01" placeholder="Latitude" style="width:110px;padding:7px">
+        <input id="locLon" type="number" step="0.01" placeholder="Longitude" style="width:110px;padding:7px">
+        <button class="btn small" id="locSave">Set location</button>
+      </div>
       <div id="zoneSched"></div>
     </div>
   </section>
@@ -690,7 +705,7 @@ async function api(path, body, method = 'POST') {
     if (!j.ok) throw new Error(j.error || 'Failed');
     if (j.status) { S = j.status; render(); }
     if (j.train) { T = j.train; renderAi(); renderTeach(); }
-    if (j.watch) { W = { watch: j.watch, catalog: j.catalog, tags: j.tags, director: j.director }; renderWatch(); }
+    if (j.watch) { W = { watch: j.watch, catalog: j.catalog, tags: j.tags, director: j.director, tonight: j.tonight }; renderWatch(); }
     return j;
   } catch (e) { toast(e.message); return null; }
 }
@@ -713,6 +728,7 @@ function connect() {
     else if (m.type === 'train') { T = m.data; renderAi(); renderTeach(); }
     else if (m.type === 'sbpreview') paintSandbox(m.data);
     else if (m.type === 'watch') { W = m.data; renderWatch(); }
+    else if (m.type === 'alerts') renderAlerts(m.data);
     else if (m.type === 'log') { logs.push(m.data); if (logs.length > 200) logs.shift(); renderLog(); }
   };
 }
@@ -862,9 +878,13 @@ function renderLooks() {
       ${l.builtin ? '' : `<button class="btn small" data-dellook="${esc(l.id)}">Delete</button>`}
     </div>`).join('');
   $('#schOn').checked = S.schedule.enabled;
-  if (document.activeElement !== $('#schStart')) $('#schStart').value = S.schedule.on.padStart(5, '0');
+  if (document.activeElement !== $('#schStart')) $('#schStart').value = (S.schedule.on === 'sunset' ? S.schedule.onToday : S.schedule.on).padStart(5, '0');
   if (document.activeElement !== $('#schEnd')) $('#schEnd').value = S.schedule.off.padStart(5, '0');
-  $('#schTz').textContent = `Time zone: ${S.schedule.tz}`;
+  $('#schTz').textContent = `Time zone: ${S.schedule.tz}${S.schedule.on === 'sunset' ? ` · today's sunset start: ${S.schedule.onToday}` : ''}`;
+  const sunsetOn = S.schedule.on === 'sunset';
+  $('#schSunset').checked = sunsetOn; $('#schStart').disabled = sunsetOn;
+  if (document.activeElement !== $('#schOffset')) $('#schOffset').value = S.schedule.sunsetOffset || 0;
+  $('#locNote').textContent = `Location for sunset & weather: ${S.location ? S.location.name : '?'}`;
   $('#musicOn').checked = S.music.enabled;
   $('#musicNote').innerHTML = S.music.enabled
     ? (S.music.live ? '🎵 Music feed is live.' : 'On, waiting for a music feed (POST <code>{level, beat}</code> to <code>/api/music</code>). Effects run on their own clock until it arrives.')
@@ -994,9 +1014,25 @@ function paintSandbox(colors) {
     if (el) el.style.setProperty('--c', `rgb(${c.r},${c.g},${c.b})`);
   }
 }
+function renderAlerts(list) {
+  $('#alertbar').innerHTML = (list || []).map(a => `<div class="al">⚠️ <span><b>${esc(a.name)}</b> isn't answering since ${new Date(a.since).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}. Check its power and Wi-Fi.</span><button data-dismiss="${esc(a.id)}">OK</button></div>`).join('');
+  // Installed app / open tab: a phone notification too, if allowed.
+  for (const a of list || []) {
+    if (renderAlerts.seen.has(a.id + a.since)) continue;
+    renderAlerts.seen.add(a.id + a.since);
+    try { if ('Notification' in window && Notification.permission === 'granted') new Notification('Christmas Lights', { body: `${a.name} isn't answering`, icon: 'icons/icon-192.png' }); } catch (_) {}
+  }
+}
+renderAlerts.seen = new Set();
+$('#alertbar').onclick = async (e) => { const b = e.target.closest('[data-dismiss]'); if (b) { const r = await fetch('/api/alerts/dismiss', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: b.dataset.dismiss }) }).then(r => r.json()); renderAlerts(r.alerts); } };
+// Ask once for notification permission (on the first tap anywhere).
+document.addEventListener('click', () => { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (_) {} }, { once: true });
+
 function renderDirector() {
   const d = W && W.director; if (!d) return;
   $('#dirOn').checked = d.enabled;
+  const tn = W.tonight || {};
+  $('#dirTonight').textContent = [tn.special ? `🎄 Tonight: ${tn.special.name}` : '', tn.weather ? (tn.weather.snowing ? '❄️ Snowing right now' : `🌙 ${Math.round(tn.weather.tempC)}°C, no snow`) : ''].filter(Boolean).join(' · ');
   if (document.activeElement !== $('#dirMin')) $('#dirMin').value = d.minutes;
   $('#dirNow').disabled = !d.enabled || d.thinking;
   $('#dirNow').textContent = d.thinking ? 'Thinking…' : 'Pick now';
@@ -1103,7 +1139,7 @@ $('#dirOn').onchange = (e) => wApi('/api/director', { enabled: e.target.checked,
 $('#dirMin').onchange = (e) => wApi('/api/director', { minutes: +e.target.value });
 $('#dirNow').onclick = () => wApi('/api/director/now');
 $('#wStart').onclick = () => api('/api/watch/start', { minutes: +$('#wMin').value, which: $('#wWhich').value, zone: S.zones.some(z => z.id === zoneSel) || S.groups.some(g => g.id === zoneSel) ? zoneSel : undefined });
-const wApi = (p, b) => api(p, b).then(r => { if (r && r.watch) { W = { watch: r.watch, catalog: r.catalog, tags: r.tags, director: r.director }; renderWatch(); } return r; });
+const wApi = (p, b) => api(p, b).then(r => { if (r && r.watch) { W = { watch: r.watch, catalog: r.catalog, tags: r.tags, director: r.director, tonight: r.tonight }; renderWatch(); } return r; });
 const wFlash = (el) => { el.classList.add('hit'); setTimeout(() => el.classList.remove('hit'), 400); };
 $('#wUp').onclick = () => { wFlash($('#wUp')); wApi('/api/catalog/rate', { id: W.watch.show.id, up: true }); };
 $('#wDown').onclick = () => { wFlash($('#wDown')); wApi('/api/catalog/rate', { id: W.watch.show.id, up: false }); };
@@ -1144,6 +1180,9 @@ $('#playlist').addEventListener('click', (e) => {
 });
 $('#schOn').onchange = (e) => api('/api/schedule', { enabled: e.target.checked });
 $('#schStart').onchange = (e) => api('/api/schedule', { on: e.target.value });
+$('#schSunset').onchange = (e) => api('/api/schedule', { on: e.target.checked ? 'sunset' : (S.schedule.onToday || '16:30') });
+$('#schOffset').onchange = (e) => api('/api/schedule', { sunsetOffset: +e.target.value });
+$('#locSave').onclick = () => { const lat = $('#locLat').value, lon = $('#locLon').value; if (!lat || !lon) return toast('Enter latitude and longitude (e.g. from Google Maps)'); api('/api/location', { lat, lon }); };
 $('#schEnd').onchange = (e) => api('/api/schedule', { off: e.target.value });
 $('#musicOn').onchange = (e) => api('/api/music/enable', { enabled: e.target.checked });
 

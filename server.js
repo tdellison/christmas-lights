@@ -21,6 +21,8 @@ const { createTraining } = require('./lib/training');
 const { createCatalog } = require('./lib/catalog');
 const { createWatch } = require('./lib/watch');
 const { createDirector } = require('./lib/director');
+const { createHealth } = require('./lib/health');
+const { createOccasion } = require('./lib/occasion');
 const { createTrainTest } = require('./lib/trainTest');
 
 const PORT = Number(process.env.PORT) || 3100;
@@ -90,11 +92,14 @@ function updateFavourites() {
 const catalog = createCatalog({ file: path.join(__dirname, 'catalog.json'), sniffDir: SNIFF_DIR, palettes: PALETTES, log, onChange: () => { updateFavourites(); sendWatch(); } });
 const watch = createWatch({ engine, catalog, sniffDir: SNIFF_DIR, log, onChange: () => sendWatch() });
 setTimeout(updateFavourites, 5000);
-const watchState = () => ({ watch: watch.status(), catalog: catalog.all(), tags: catalog.TAGS, director: director ? director.status() : null });
+const watchState = () => ({ watch: watch.status(), catalog: catalog.all(), tags: catalog.TAGS, director: director ? director.status() : null, tonight: typeof occasion !== 'undefined' ? occasion.now() : null });
 function sendWatch() { broadcast({ type: 'watch', data: watchState() }); }
 const assistant = createAssistant({ engine, llama, training, catalog, log, onChange: sendAi });
 // Qwen as show director (lib/director.js), fed by the same catalog.
-const director = createDirector({ file: path.join(__dirname, 'director.json'), engine, catalog, llama, isWatching: () => watch.status().running, log, onChange: () => sendWatch() });
+// Special nights + weather (for the Director), and light health alerts.
+const occasion = createOccasion({ engine, log, onChange: () => sendWatch() });
+const health = createHealth({ engine, log, onChange: () => broadcast({ type: 'alerts', data: health.alerts() }) });
+const director = createDirector({ file: path.join(__dirname, 'director.json'), engine, catalog, llama, occasion, isWatching: () => watch.status().running, log, onChange: () => sendWatch() });
 
 // ── Training sandbox ── a copy of the yard the elves can practise on. It has
 // no drivers, so nothing it does reaches a real light; only the app shows it.
@@ -129,6 +134,7 @@ const onConnect = (ws) => {
   ws.send(JSON.stringify({ type: 'cloud', data: cloud.status() }));
   ws.send(JSON.stringify({ type: 'train', data: trainState() }));
   ws.send(JSON.stringify({ type: 'watch', data: watchState() }));
+  ws.send(JSON.stringify({ type: 'alerts', data: health.alerts() }));
 };
 for (const w of sockets) w.on('connection', onConnect);
 
@@ -204,6 +210,9 @@ app.post('/api/catalog/unrate', watchRoute(({ id, up }) => { catalog.unrate(id, 
 app.post('/api/catalog/tag', watchRoute(({ id, tag }) => { catalog.toggleTag(id, lookName(id), tag); }));
 app.post('/api/catalog/note', watchRoute(({ id, text }) => { catalog.addNote(id, lookName(id), text); }));
 app.post('/api/catalog/note/delete', watchRoute(({ id, at }) => { catalog.deleteNote(id, at); }));
+app.post('/api/alerts/dismiss', (req, res) => { health.dismiss((req.body || {}).id); res.json({ ok: true, alerts: health.alerts() }); });
+app.post('/api/alerts/check', async (req, res) => { await health.check(); res.json({ ok: true, alerts: health.alerts() }); });
+app.post('/api/location', route((b) => { const st = engine.setLocation(b); occasion.refresh(); return st; }));
 app.post('/api/director', watchRoute(({ enabled, minutes }) => { director.set({ enabled, minutes }); }));
 app.post('/api/director/now', watchRoute(() => { director.now(); }));
 app.post('/api/catalog/reload', watchRoute(() => ({ flavors: catalog.loadFlavors() })));
