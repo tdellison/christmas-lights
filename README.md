@@ -29,7 +29,7 @@ Auto-start: see `deploy/christmas-lights.service`.
 
 - **Lights**: tick one or more lights, then set the effect, palette or your
   own colours, brightness and speed. Each light can run something different.
-- **Looks**: 10 built-in Christmas looks. Set the yard how you like it and
+- **Looks**: 9 built-in Christmas looks (Classic Chase, Candy Cane Lane, Red & Green Fade, Snowfall, North Pole Wave, Grinch Alternate, Festive Sparkle, Grinch Run, Rainbow Wheel). Set the yard how you like it and
   **Save current** to make your own.
 - **Auto-rotate**: switches to the next look in the playlist every N minutes.
   Tick which looks are in it.
