@@ -15,7 +15,7 @@ Govee LAN, ptReal and queue rules apply.
   look, optional own schedule; devices have `zone`; `front` = both front
   zones. Effect groups are per zone. Govee scenes per zone need `d.mac`
   (from Scan → Use). The elves get the zone from the request words when
-  Llama leaves it out (`zoneInText`).
+  Qwen leaves it out (`zoneInText`). Zones are fixed (no add/remove API).
 - `light.trim` (5-100, spot brightness): placement cap applied in frame()
   after effect × bri; never saved in or applied from looks; during a Govee
   scene the pair's LAN brightness = master × average trim.
@@ -25,18 +25,19 @@ Govee LAN, ptReal and queue rules apply.
   stop() fades then stopNow()), `lib/health.js` (probes devices every 2 min
   while running, alert after 2 misses), `lib/occasion.js` (special nights +
   Open-Meteo snow, one line in the Director's prompt).
-- `lib/effects.js`: `fx(ctx) -> {r,g,b}`. Keep effects pure functions of
+- `lib/effects.js`: `fx(ctx) -> {r,g,b}`. No warm effects/palettes (Hearth
+  Glow and Warm White removed: off the owner's scheme). Keep effects pure functions of
   `ctx.t`. Per-light random state goes in `ctx.mem`.
-- `lib/llama.js` + `lib/assistant.js`: "Ask the elves" chat (Elves tab).
+- `lib/llama.js` (old name, runs Qwen) + `lib/assistant.js`: "Ask the elves" chat (Elves tab).
   Local Qwen 3 30B-A3B instruct-2507 (Ollama, MoE ~3B active, ~18 GB RAM, CPU);
   chosen by the scored 14-request test over Qwen 3 8B, Qwen 3.5 9B and Llama
   3.1 8B (14/14, ~2x faster than the 8B). Re-run the test before any swap. Code
   strips unasked speed/brightness/save from plain commands.
-  Llama only returns `{actions:[]}` (schema-enforced, ids are enums); the app
+  Qwen only returns `{actions:[]}` (schema-enforced, ids are enums); the app
   runs them and writes the reply. Designs ("surprise me", "design ... called
   X") are built aside with `engine.designLook` and saved, never applied live;
   tweaks right after go to that draft; "play it" plays it. Show searches,
-  on/off and exact show names are handled in code, no Llama.
+  on/off and exact show names are handled in code, no Qwen.
   Prompt cache: system prompt + examples must stay byte-identical (saved
   looks, history and draft go in the LAST message) or Ollama re-reads ~1500
   tokens (~55 s). `assistant.prime()` warms it at startup.

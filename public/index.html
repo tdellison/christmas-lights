@@ -877,7 +877,6 @@ function renderDevices() {
             <input type="password" value="" data-dtkey placeholder="${d.hasKey ? 'Local key saved' : 'Local key'}" aria-label="Tuya local key" autocomplete="off" style="flex:1 1 120px;min-width:0;padding:8px 10px">
             <select data-dtver aria-label="Protocol" style="width:auto;padding:8px">${['3.3', '3.4', '3.5', '3.1'].map(v => `<option ${v === (d.tuyaVersion || '3.3') ? 'selected' : ''}>${v}</option>`).join('')}</select>
             <input type="text" value="${esc(d.about || '')}" data-dabout placeholder="What it powers (for Qwen), e.g. laser projector: red &amp; green dots" aria-label="What it powers" style="flex:1 1 100%;min-width:0;padding:8px 10px">` : ''}
-          ${d.kind === 'brmesh' || d.kind === 'plug' ? '' : `<select data-dsegs aria-label="Lights on it">${[1,2,3,4].map(k => `<option value="${k}" ${k === d.segments ? 'selected' : ''}>${k === 2 ? '2 lights' : k === 1 ? '1 light' : k + ' lights'}</option>`).join('')}</select>`}
           <button class="btn small" data-dsave>Save</button>
           <button class="btn small" data-dprobe ${set ? '' : 'disabled'}>Test</button>
           <button class="btn small" data-ddel aria-label="Remove pair">✕</button>
@@ -1133,7 +1132,7 @@ $('#devices').addEventListener('click', async (e) => {
     e.target.blur();
     const names = box.querySelector('[data-dnames]'), kind = (S.devices.find(d => d.id === id) || {}).kind;
     const extra = kind === 'plug' ? { tuyaId: box.querySelector('[data-dtid]').value, tuyaKey: box.querySelector('[data-dtkey]').value, tuyaVersion: box.querySelector('[data-dtver]').value, about: box.querySelector('[data-dabout]').value }
-      : names ? { ble: names.value } : { segments: +box.querySelector('[data-dsegs]').value };
+      : names ? { ble: names.value } : {};
     const via = box.querySelector('[data-dvia]'), ip = box.querySelector('[data-dip]');
     api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ...(ip ? { ip: ip.value } : {}), ...extra, ...(via ? { via: via.value } : {}) });
   }

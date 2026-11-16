@@ -28,9 +28,9 @@ Auto-start: see `deploy/christmas-lights.service`.
    preview but is never sent to, and Qwen ignores empty plugs.
    More later: **Setup → + Add Govee pair / + Add Bluetooth pair / + Add
    smart plug**.
-3. Say how many lights are on each controller. A Spotlight 2 two-pack is
-   **2**: one IP, two lights you control separately.
-4. Put the lights in yard order, left to right. Chases and waves follow it.
+   Each Govee pair is a Spotlight 2 two-pack: one IP, two lights you
+   control separately.
+3. Put the lights in yard order, left to right. Chases and waves follow it.
    Use **Find it** on the Lights tab to blink one light white.
 
 ## Using it
@@ -223,7 +223,7 @@ What they're taught is in `training.json` and is used by the live elves too.
 ## Effects
 
 Solid, Breathe, Colour Fade, Wave, Chase, Candy Cane, Alternate, Twinkle,
-Snowfall, Sparkle, Hearth Glow, Rainbow, Music Pulse, Runner (a flash
+Snowfall, Sparkle, Rainbow, Music Pulse, Runner (a flash
 shoots across the whole yard; the Grinch Run look is red/white with a green
 flash).
 
