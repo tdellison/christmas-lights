@@ -625,7 +625,7 @@
       <div id="found" style="margin-top:10px"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="gCard">
       <h2>Govee account</h2>
       <p class="note" style="margin-top:0">Plays Govee's own scenes and the DIYs you save in the Govee app (from Share Space). These go through Govee's cloud.</p>
       <div class="row">
@@ -947,6 +947,11 @@ function renderFound() {
 }
 function renderGovee() {
   if (!G) return;
+  // Govee cloud off (config.json goveeCloud): no account card, no Govee-only Watch choices.
+  $('#gCard').style.display = G.off ? 'none' : '';
+  for (const o of $('#wWhich').options) if (o.value === 'govee' || o.value === 'all') o.hidden = !!G.off;
+  $('#wWhich').options[0].textContent = G.off ? 'Our looks & saved looks' : 'My looks, DIYs & Christmas scenes';
+  if (G.off) return;
   $('#gKey').placeholder = G.enabled ? `Saved (${G.keyHint}) · paste a new key to change` : 'API key (Govee app → Profile → About Us)';
   const nScenes = G.scenes.filter(x => x.kind === 'scene').length, nDiy = G.scenes.filter(x => x.kind === 'diy').length;
   $('#gState').textContent = !G.enabled ? 'Not connected.'

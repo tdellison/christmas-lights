@@ -172,9 +172,16 @@ red/green ones; plain strings stay on (blinking only when he chooses, paced
 to last the night). The elves switch them by name ("turn off the laser
 dots").
 
-## Govee scenes and DIYs
+## Govee scenes and DIYs (off)
 
-**Setup → Govee account**: paste the API key from the Govee app (Profile →
+**Off by default** (`"goveeCloud": false` in `config.json`): those scenes and
+DIYs were made for roofline lights, not the spotlights, so the yard runs only
+the 9 built-in looks plus saved looks and the elves' designs. While it's off
+the app makes no Govee cloud calls and Govee shows are left out of Looks, the
+elves, the Director, auto-rotate and Watch; their catalog ratings are kept,
+just hidden. To bring them back, set `"goveeCloud": true` and restart.
+
+When on, **Setup → Govee account**: paste the API key from the Govee app (Profile →
 About Us → Apply for API Key). Govee's built-in scenes (Christmas-A, Sled,
 ...) and any DIYs you save from the app's Share Space then show up as looks,
 work in auto-rotate, and the elves can pick them. They play through Govee's

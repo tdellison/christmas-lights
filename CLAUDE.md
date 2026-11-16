@@ -57,6 +57,12 @@ Govee LAN, ptReal and queue rules apply.
   requests) to keep the prompt cache. Watch sniffs Govee shows (engine
   probeDevice ~4/s, `lib/flavor.js` summarize) into catalog flavor; server
   keeps PALETTES.favourites = colours of 👍 shows (flavor.favourites).
+- `cfg.goveeCloud` (default false, owner's choice: those shows were made for
+  roofline lights): server only creates the cloud client and passes
+  `external` when true, so off = no cloud calls and no `govee:*` looks
+  anywhere (catalog entries kept, hidden since everything goes via engine
+  looks). Zones pointing at a govee look reset to custom. trainTest keeps
+  its own fake Govee DIYs, so the test is unchanged.
 - `lib/goveeCloud.js`: Govee Platform API (cloud) for Govee scenes + app
   DIYs, offered to the engine as `govee:<kind>:<name>` looks. While one plays
   the engine sends nothing. Key in `secrets.json`, never in git or the UI.

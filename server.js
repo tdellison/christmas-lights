@@ -63,13 +63,17 @@ const govee = createGovee({
 });
 let engine = null;
 const sendStatus = () => engine && broadcast({ type: 'status', data: engine.status() });
-const cloud = createGoveeCloud({ file: SECRETS, log, onChange: () => { sendStatus(); broadcast({ type: 'cloud', data: cloud.status() }); } });
+// Govee cloud scenes/DIYs only when config.json has goveeCloud: true (off by
+// default: they were made for roofline lights). Off = no Govee cloud calls.
+const GOVEE_CLOUD = (() => { try { return JSON.parse(fs.readFileSync(DATA, 'utf8')).goveeCloud === true; } catch (_) { return false; } })();
+const cloud = GOVEE_CLOUD ? createGoveeCloud({ file: SECRETS, log, onChange: () => { sendStatus(); broadcast({ type: 'cloud', data: cloud.status() }); } }) : null;
+const cloudStatus = () => (cloud ? cloud.status() : { off: true });
 const esphome = createEsphome({ log });
 const tuya = createTuya({ log });
 // BRMesh lights from the server's TP-Link Bluetooth; mesh key from deploy/secrets.yaml.
 const meshKey = (() => { try { return (/^brmesh_mesh_key:\s*"?([0-9a-fA-F]{8})/m.exec(fs.readFileSync(path.join(__dirname, 'deploy', 'secrets.yaml'), 'utf8')) || [])[1]; } catch (_) { return null; } })();
 const bleLocal = createBleLocal({ key: meshKey, seqFile: path.join(__dirname, 'ble-seq.json'), log });
-engine = createEngine({ file: DATA, govee, esphome, tuya, bleLocal, log, onChange: sendStatus, external: { looks: () => cloud.looks(), play: (k, macs) => cloud.play(k, macs), power: (on) => cloud.power(on) } });
+engine = createEngine({ file: DATA, govee, esphome, tuya, bleLocal, log, onChange: sendStatus, external: cloud && { looks: () => cloud.looks(), play: (k, macs) => cloud.play(k, macs), power: (on) => cloud.power(on) } });
 
 // Ask the elves: plain-English commands through local Llama.
 const aiState = () => ({ ...llama.status(), history: assistant.history() });
@@ -106,7 +110,7 @@ const director = createDirector({ file: path.join(__dirname, 'director.json'), e
 let trainTimer = null;   // coalesce bursts of training changes into one message
 const nogo = { turn() {}, brightness() {}, color() {}, segments() {}, pending: () => 0, dropEffects() {}, lastSeen: () => null, probe: async () => null };
 const sandbox = createEngine({ file: path.join(__dirname, 'sandbox.json'), govee: nogo, log: () => {}, auto: false, onChange: () => sendTrain(),
-  external: { looks: () => cloud.looks(), play: async () => {}, power: async () => {} } });
+  external: cloud && { looks: () => cloud.looks(), play: async () => {}, power: async () => {} } });
 const resetSandbox = () => { sandbox.loadConfig(engine.exportConfig()); try { sandbox.start(); } catch (_) {} };
 resetSandbox();
 const trainer = createAssistant({ engine: sandbox, llama, training, catalog, log: (m) => log(`[training] ${m}`), onChange: () => sendTrain() });
@@ -131,7 +135,7 @@ const onConnect = (ws) => {
   ws.send(JSON.stringify({ type: 'found', data: [...found.values()] }));
   ws.send(JSON.stringify({ type: 'logs', data: logs }));
   ws.send(JSON.stringify({ type: 'ai', data: aiState() }));
-  ws.send(JSON.stringify({ type: 'cloud', data: cloud.status() }));
+  ws.send(JSON.stringify({ type: 'cloud', data: cloudStatus() }));
   ws.send(JSON.stringify({ type: 'train', data: trainState() }));
   ws.send(JSON.stringify({ type: 'watch', data: watchState() }));
   ws.send(JSON.stringify({ type: 'alerts', data: health.alerts() }));
@@ -177,10 +181,10 @@ app.post('/api/music', (req, res) => { engine.music(req.body || {}); res.json({ 
 
 // Govee account (cloud scenes + DIYs from the Govee app).
 const cloudRoute = (fn) => async (req, res) => {
-  try { await fn(req.body || {}); res.json({ ok: true, cloud: cloud.status(), status: engine.status() }); }
+  try { if (!cloud) throw new Error('Govee cloud is off (goveeCloud in config.json)'); await fn(req.body || {}); res.json({ ok: true, cloud: cloud.status(), status: engine.status() }); }
   catch (e) { res.status(409).json({ ok: false, error: e.message }); }
 };
-app.get('/api/govee', (req, res) => res.json({ ok: true, cloud: cloud.status() }));
+app.get('/api/govee', (req, res) => res.json({ ok: true, cloud: cloudStatus() }));
 app.post('/api/govee/key', cloudRoute(({ key }) => cloud.setKey(key)));
 app.post('/api/govee/refresh', cloudRoute(() => cloud.refresh()));
 app.post('/api/govee/favorites', cloudRoute(({ favorites }) => cloud.setFavorites(favorites)));
