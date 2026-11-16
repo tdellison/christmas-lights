@@ -160,8 +160,7 @@ dots").
 DIYs were made for roofline lights, not the spotlights, so the yard runs only
 the 9 built-in looks plus saved looks and the elves' designs. While it's off
 the app makes no Govee cloud calls and Govee shows are left out of Looks, the
-elves, the Director, auto-rotate and Watch; their catalog ratings are kept,
-just hidden. To bring them back, set `"goveeCloud": true` and restart.
+elves, the Director and auto-rotate. To bring them back, set `"goveeCloud": true` and restart.
 
 When on, **Setup → Govee account**: paste the API key from the Govee app (Profile →
 About Us → Apply for API Key). Govee's built-in scenes (Christmas-A, Sled,
@@ -173,36 +172,22 @@ Govee Christmas & winter, More Govee scenes) with a search box. New DIYs show up
 within the hour, or tap Refresh. The key is kept in `secrets.json` (git
 ignores it) and never sent to the browser.
 
-## Watch & rate, and the Director
-
-**Looks → Watch & rate** plays every show in turn (choose minutes each and
-which shows; it uses the selected zone). For the one playing: **👍 / 👎**,
-tags (cozy, energetic, kids, late night) and a note.
-Back / +1 min / Next / Stop. Auto-rotate pauses while watching. Everything
-goes into the show catalog (`catalog.json`), and look cards show their score
-and tags.
-
-While a Govee show plays, Watch mode also **records its colours and pace**
-(it asks a spotlight its colour ~4×/s; the spotlight must be online), so one
-pass rates and catalogues. The **"Your Favourites" palette** is the colours
-of your 9 looks (Rainbow Wheel aside): Qwen designs with it ("design
-something in the style of my favourites") and you can pick it in the light
-editor.
+## House style and the Director
 
 **House style**: the elves and the Director are told what each of the 9
-looks is (effect and colours) and design in that flavour. Warm white, amber,
-orange and gold are off-scheme: the elves never use them unless you ask, and
-code swaps them for white if Qwen slips.
+looks is (effect and colours) and design in that flavour. Movies and themes
+("a Frozen show") come from Qwen's own knowledge; for something obscure, name
+the colours too. Warm white, amber, orange and gold are off-scheme: the
+elves never use them unless you ask, and code swaps them for white if Qwen
+slips. The **"Your Favourites" palette** is the colours of your 9 looks
+(Rainbow Wheel aside), pickable in the light editor.
 
 **Looks → Director**: Qwen picks what plays across the front yard every N
-minutes from that catalog, the time of night and what he played lately, and
-says why. Your hard rules are enforced in code: never a 👎 show,
-no recent repeats, Govee shows only where
-the app knows the Govee lights (Scan → Use). If he can't be reached, a
-weighted pick from your ratings covers that turn. It replaces auto-rotate.
-
-The elves get the catalog too ("something the kids like", "which shows are
-cozy?").
+minutes from your looks, the time of night, special nights, snow and what he
+played lately, and says why. Code keeps him to no recent repeats (every look
+gets its turn) and Govee shows only where the app knows the Govee lights
+(Scan → Use). If he can't be reached, a random allowed look covers that
+turn. It replaces auto-rotate.
 
 ## Ask the elves
 
@@ -234,11 +219,6 @@ yard (shown above the chat); nothing reaches the real lights.
   can see whether teaching helped.
 
 What they're taught is in `training.json` and is used by the live elves too.
-
-**Govee show sniffer** (experiment): `node tools/sniff-govee.js 192.168.1.209 --all`
-plays each Govee show and samples the spotlight's colour 4×/s to record its
-flavor (main colours, how fast it changes) in `data/sniff/`. If it reports
-STUCK, the light doesn't reveal show colours and this can't work.
 
 ## Effects
 

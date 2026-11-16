@@ -48,16 +48,14 @@ Govee LAN, ptReal and queue rules apply.
 - Effects get `ctx.yard` (0..1 position across the light's AREA: both front
   zones together) besides the per-zone `pos`; `runner` uses it to cross the
   front yard.
-- Catalog / Watch / Director: `lib/catalog.js` (catalog.json: per look id
-  up/down, tags, notes, sniffed flavor from data/sniff), `lib/watch.js`
-  (plays each show N min, pauses rotate), `lib/director.js` (Qwen picks one
-  show for the whole yard every N min, `{show, why}`; code enforces 👎 never,
-  no repeats, Govee only where d.mac known; weighted fallback if Qwen fails).
-  Tags: cozy, energetic, kids, late night. The
-  compact catalog goes in the LAST message only (elves: only for show-ish
-  requests) to keep the prompt cache. Watch sniffs Govee shows (engine
-  probeDevice ~4/s, `lib/flavor.js` summarize) into catalog flavor; server
-  keeps PALETTES.favourites = colours of the 9 built-in looks (not rainbow,
+- Director: `lib/director.js` (Qwen picks one show for the whole yard every
+  N min, `{show, why}`, from the looks + time of night + occasion + recent
+  picks; code enforces no repeats of the last few (fewer when there are few
+  looks) and Govee only where d.mac known; random allowed look if Qwen fails).
+  Watch & rate, the ratings catalog (👍/👎, tags, notes) and the Govee show
+  sniffer were removed 2026-11-16 (owner: all 9 looks get used; Qwen learns
+  style from the looks themselves and from Training). Server keeps
+  PALETTES.favourites = colours of the 9 built-in looks (not rainbow,
   max 8). House style: elves `styleLines()` and Director `system()` list each
   built-in look's effect + colour words (fixed, cache-safe); no warm white /
   amber / orange / gold unless asked (prompt + `isWarm` code guard swaps them
@@ -65,8 +63,7 @@ Govee LAN, ptReal and queue rules apply.
 - `cfg.goveeCloud` (default false, owner's choice: those shows were made for
   roofline lights): server only creates the cloud client and passes
   `external` when true, so off = no cloud calls and no `govee:*` looks
-  anywhere (catalog entries kept, hidden since everything goes via engine
-  looks). Zones pointing at a govee look reset to custom. trainTest keeps
+  anywhere. Zones pointing at a govee look reset to custom. trainTest keeps
   its own fake Govee DIYs, so the test is unchanged.
 - `lib/goveeCloud.js`: Govee Platform API (cloud) for Govee scenes + app
   DIYs, offered to the engine as `govee:<kind>:<name>` looks. While one plays
