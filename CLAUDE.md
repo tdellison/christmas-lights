@@ -107,4 +107,4 @@ Rules:
   6-pair + Bluetooth yard (lights 1-6 front left, 7-12 front right, 13-14
   Bluetooth); don't tie it to PAIR_SLOTS. Its zone requests use left/right
   (no backyard) since 2026-11-16.
-- Owner prefers short answers and no prices.
+- Owner prefers short answers and no prices. Temperatures shown in °F (Open-Meteo gives °C; `tempC` stays internal). Yard: Eagle Mountain, UT (40.31, -112.01), America/Denver.

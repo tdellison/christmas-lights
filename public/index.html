@@ -995,7 +995,7 @@ function renderDirector() {
   const d = D && D.director; if (!d) return;
   $('#dirOn').checked = d.enabled;
   const tn = D.tonight || {};
-  $('#dirTonight').textContent = [tn.special ? `🎄 Tonight: ${tn.special.name}` : '', tn.weather ? (tn.weather.snowing ? '❄️ Snowing right now' : `🌙 ${Math.round(tn.weather.tempC)}°C, no snow`) : ''].filter(Boolean).join(' · ');
+  $('#dirTonight').textContent = [tn.special ? `🎄 Tonight: ${tn.special.name}` : '', tn.weather ? (tn.weather.snowing ? '❄️ Snowing right now' : `🌙 ${Math.round(tn.weather.tempC * 9 / 5 + 32)}°F, no snow`) : ''].filter(Boolean).join(' · ');
   if (document.activeElement !== $('#dirMin')) $('#dirMin').value = d.minutes;
   $('#dirNow').disabled = !d.enabled || d.thinking;
   $('#dirNow').textContent = d.thinking ? 'Thinking…' : 'Pick now';
