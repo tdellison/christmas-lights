@@ -612,11 +612,11 @@
   <!-- SETUP -->
   <section id="tab-setup">
     <div class="card">
-      <h2>Light pairs</h2>
-      <p class="note" style="margin-top:0">Each pair is one Govee controller: one IP, two lights you control separately. Type the IP, or scan and pick a slot. Empty slots still show in the preview.</p>
+      <h2>Devices</h2>
+      <p class="note" style="margin-top:0">Your Govee pairs, Bluetooth pairs and smart plugs. Empty slots still show in the preview.</p>
       <div id="devices"></div>
-      <div class="row" style="margin-top:10px"><button class="btn" id="addPair">+ Add a pair</button><button class="btn" id="addBle">+ Add Bluetooth pair</button><button class="btn" id="addRelay">+ Add C9 relay board</button><button class="btn" id="addPlug">+ Add smart plug</button></div>
-      <p class="note">Bluetooth pairs are BRMesh-app lights, sent through an ESP32 bridge (<code>deploy/esp32-brmesh.yaml</code>). C9 relay boards switch plain strings on and off through an ESP32 (<code>deploy/esp32-relays.yaml</code>). For both, type the ESP32's IP and its names. A smart plug (Tuya: Enbrighten, Smart Life) switches whatever is plugged into it on and off with the show, zone and schedule; it needs its device ID and local key (README "Smart plug").</p>
+      <div class="row" style="margin-top:10px"><button class="btn" id="addPair">+ Add Govee pair</button><button class="btn" id="addBle">+ Add Bluetooth pair</button><button class="btn" id="addPlug">+ Add smart plug</button><button class="btn" id="addRelay">+ Add ESP32 relay board</button></div>
+      <p class="note"><b>Govee pair</b>: one Govee controller (one IP, two lights); type the IP or Scan → Use. <b>Bluetooth pair</b>: BRMesh-app lights, sent from this server's Bluetooth or through an ESP32 bridge (<code>deploy/esp32-brmesh.yaml</code>); pick which in its "via" box. <b>Smart plug</b> (Tuya: Enbrighten, Smart Life): switches whatever is plugged in on and off with the show; needs its IP, device ID and local key (README "Smart plug"), and say what it powers so Qwen can judge it. <b>ESP32 relay board</b>: plain strings on relays (<code>deploy/esp32-relays.yaml</code>). A slot with nothing filled in is previewed but never sent to, and Qwen ignores empty plugs.</p>
     </div>
 
     <div class="card">

@@ -12,3 +12,4 @@ director.json
 *.save
 *.bak
 ble-seq.json
+config.json.bak*

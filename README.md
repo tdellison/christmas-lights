@@ -19,7 +19,14 @@ Auto-start: see `deploy/christmas-lights.service`.
 ## Setup (once)
 
 1. In the Govee app, turn on **LAN Control** for each light.
-2. **Setup → Scan network**, then **Add** each light. Or type its IP.
+2. **Setup → Scan network**, then **Use** on a slot. Or type its IP.
+   A fresh install starts with 2 empty Govee pair slots (4 lights).
+   This yard has: 2 Govee pairs, the BRMesh Bluetooth pair (server
+   Bluetooth), a spare Bluetooth pair slot, and 4 C9 smart plug slots.
+   An empty slot (no IP, or a plug with no device ID / key) shows in the
+   preview but is never sent to, and Qwen ignores empty plugs.
+   More later: **Setup → + Add Govee pair / + Add Bluetooth pair / + Add
+   smart plug / + Add ESP32 relay board**.
 3. Say how many lights are on each controller. A Spotlight 2 two-pack is
    **2**: one IP, two lights you control separately.
 4. Put the lights in yard order, left to right. Chases and waves follow it.

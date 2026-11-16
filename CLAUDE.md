@@ -1,6 +1,6 @@
 # christmas-lights: notes for Claude Code
 
-Christmas light controller for Govee LAN lights. Lights only, music optional.
+Christmas light controller: Govee LAN lights, BRMesh Bluetooth lights and Tuya smart plugs. Lights only, music optional.
 Govee LAN, ptReal and queue rules apply.
 
 - `lib/govee.js`: UDP. Per-IP queue with a 50 ms gap (controllers drop
@@ -91,6 +91,12 @@ Rules:
   ports share the WebSockets. `/ca.crt` serves the CA's public cert.
 - Port 3100. Govee listen port 4002 clashes with any other Govee LAN
   app, so never run two at once.
-- Fresh installs start with 6 two-light pair slots (12 lights) and no IPs;
-  a slot with no IP is previewed but never sent to.
+- Fresh installs start with PAIR_SLOTS = 2 Govee pair slots (4 lights), no
+  IPs; a slot with no IP is previewed but never sent to. Owner's yard: Pair 1
+  (.216) + Pair 4 (.209), "Bluetooth pair" (via server), "Bluetooth spare"
+  (empty, via esp32, no IP, so never sent), C9 plug 1-4 (empty). Plug lights
+  carry `ready` (ip + tuyaId + key) in status; the Director's askPlugs and
+  the elves' plugLine skip plugs that aren't ready. trainTest builds its own
+  6-pair + Bluetooth yard (lights 1-6 front left, 7-12 front right) so scores
+  stay comparable; don't tie it to PAIR_SLOTS.
 - Owner prefers short answers and no prices.
