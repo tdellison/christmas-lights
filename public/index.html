@@ -222,12 +222,8 @@
   #plWrap summary { color: var(--gold); }
   .ask form { display: flex; gap: 8px; }
   .ask input { flex: 1; min-width: 0; }
-  .ask .ideas { display: flex; gap: 6px; overflow-x: auto; margin-top: 10px; padding-bottom: 2px; scrollbar-width: none; }
-  .ask .ideas::-webkit-scrollbar { display: none; }
-  .ask .ideas button { flex: none; font-size: 13px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); color: var(--warm); }
   .ask .talk { margin: 10px 0; display: flex; flex-direction: column; gap: 8px; min-height: 120px; max-height: calc(100vh - 430px); overflow-y: auto; padding: 4px 2px; }
-  .ask .talk:empty::before { content: "Try \"surprise me\" or tap an idea below."; color: var(--dim); font-size: 14px; margin: auto; }
-  .ask .ideas { margin: 0 0 10px; }
+  .ask .talk:empty::before { content: "Try \"surprise me\" or \"candy cane on the left\"."; color: var(--dim); font-size: 14px; margin: auto; }
   .msg .acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
   .msg .acts button { font-size: 13px; padding: 5px 11px; border-radius: 999px; border: 1px solid #2b6a4a; background: #0f3626; color: var(--text); }
   .msg .acts button.go { background: linear-gradient(180deg, #2aa553, #1d8240); border-color: #3cc66a; color: #fff; font-weight: 700; }
@@ -297,7 +293,7 @@
   input[type=password] { width: 100%; color: var(--text); border: 1px solid #2b6a4a; border-radius: 12px; padding: 11px; font-size: 16px; }
   button.btn { background: #144531; border-color: #2b6a4a; }
   button.btn.primary { background: repeating-linear-gradient(-45deg, rgba(255,255,255,.12) 0 6px, transparent 6px 14px), linear-gradient(180deg, #d8323a, #a81f27); }
-  .chip, .gchips button, .ask .ideas button { background: #0f3626; border-color: #2b6a4a; }
+  .chip, .gchips button { background: #0f3626; border-color: #2b6a4a; }
   .light.sel { background: rgba(246,197,91,.12); }
   .light { border-bottom-color: #1f4d37; }
   .pl, .slot, .dev { border-bottom-color: #1f4d37; }
@@ -577,10 +573,6 @@
       <p class="note" id="elfNote" style="margin-top:8px"></p>
       <div id="sbYard" class="sbyard"></div>
       <div class="talk" id="talk"></div>
-      <div class="ideas" id="ideas">
-        <button>Surprise me</button><button data-fill="Design a show called ">Design a show called…</button><button>What snow shows do I have?</button>
-        <button>Candy cane out front, warm twinkle out back</button><button>Slower</button><button>Brighter</button><button>Turn off the backyard</button><button>Change looks every 15 minutes</button>
-      </div>
       <form id="askForm" autocomplete="off">
         <input id="askText" type="text" placeholder="e.g. design an icy blue show called Jack Frost" enterkeyhint="send">
         <button class="btn primary" id="askBtn">Send</button>
@@ -593,7 +585,7 @@
         <h2>House notes</h2>
         <p class="note" style="margin-top:0">Things the elves always keep in mind. You can also type "remember …" in the chat.</p>
         <div id="notes"></div>
-        <form id="noteForm" class="row" style="margin-top:8px" autocomplete="off"><input class="grow" id="noteText" type="text" placeholder="e.g. the backyard is the deck"><button class="btn primary">Add</button></form>
+        <form id="noteForm" class="row" style="margin-top:8px" autocomplete="off"><input class="grow" id="noteText" type="text" placeholder="e.g. the trees by the window are the Bluetooth lights"><button class="btn primary">Add</button></form>
       </div>
       <div class="card">
         <h2>What they've learned</h2>
@@ -615,8 +607,8 @@
       <h2>Devices</h2>
       <p class="note" style="margin-top:0">Your Govee pairs, Bluetooth pairs and smart plugs. Empty slots still show in the preview.</p>
       <div id="devices"></div>
-      <div class="row" style="margin-top:10px"><button class="btn" id="addPair">+ Add Govee pair</button><button class="btn" id="addBle">+ Add Bluetooth pair</button><button class="btn" id="addPlug">+ Add smart plug</button><button class="btn" id="addRelay">+ Add ESP32 relay board</button></div>
-      <p class="note"><b>Govee pair</b>: one Govee controller (one IP, two lights); type the IP or Scan → Use. <b>Bluetooth pair</b>: BRMesh-app lights, sent from this server's Bluetooth or through an ESP32 bridge (<code>deploy/esp32-brmesh.yaml</code>); pick which in its "via" box. <b>Smart plug</b> (Tuya: Enbrighten, Smart Life): switches whatever is plugged in on and off with the show; needs its IP, device ID and local key (README "Smart plug"), and say what it powers so Qwen can judge it. <b>ESP32 relay board</b>: plain strings on relays (<code>deploy/esp32-relays.yaml</code>). A slot with nothing filled in is previewed but never sent to, and Qwen ignores empty plugs.</p>
+      <div class="row" style="margin-top:10px"><button class="btn" id="addPair">+ Add Govee pair</button><button class="btn" id="addBle">+ Add Bluetooth pair</button><button class="btn" id="addPlug">+ Add smart plug</button></div>
+      <p class="note"><b>Govee pair</b>: one Govee controller (one IP, two lights); type the IP or Scan → Use. <b>Bluetooth pair</b>: BRMesh-app lights, sent from this server's Bluetooth (TP-Link); type their light ids from the BRMesh app (e.g. 1, 2), or set it to "not connected" for a spare slot. <b>Smart plug</b> (Tuya: Enbrighten, Smart Life): switches whatever is plugged in on and off with the show; needs its IP, device ID and local key (README "Smart plug"), and say what it powers so Qwen can judge it. A slot with nothing filled in is previewed but never sent to, and Qwen ignores empty plugs.</p>
     </div>
 
     <div class="card">
@@ -751,7 +743,7 @@ function render() {
   if (zoneSel !== 'all' && !S.groups.some(g => g.id === zoneSel) && !S.zones.some(z => z.id === zoneSel)) zoneSel = 'all';
   const num = new Map(S.lights.map((l, i) => [l.id, i + 1]));
   const bulb = (l) => `
-    <button class="bulb ${S.running ? '' : 'idle'} ${l.on ? '' : 'off'} ${noIp.has(l.device) ? 'noip' : ''} ${selected.has(l.id) ? 'sel' : ''}" style="--idle:${esc(l.relay || l.plug ? l.string || '#ffb46b' : l.palette[0])}" data-bulb="${esc(l.id)}" data-live="${esc(l.id)}" title="${esc(l.name)}">
+    <button class="bulb ${S.running ? '' : 'idle'} ${l.on ? '' : 'off'} ${noIp.has(l.device) ? 'noip' : ''} ${selected.has(l.id) ? 'sel' : ''}" style="--idle:${esc(l.plug ? l.string || '#ffb46b' : l.palette[0])}" data-bulb="${esc(l.id)}" data-live="${esc(l.id)}" title="${esc(l.name)}">
       <span class="glow"></span><span class="cap"></span><span class="glass"></span>
       <span class="tag"><b>${num.get(l.id)}</b>${esc(l.name)}</span>
     </button>`;
@@ -825,7 +817,7 @@ function renderEditor() {
   $('#edColors').innerHTML = L.palette.map((c, i) => `<input type="color" value="${c}" data-ci="${i}">`).join('')
     + (L.palette.length < 6 ? '<button class="btn small" id="addColor">+</button>' : '')
     + (L.palette.length > 1 ? '<button class="btn small" id="rmColor">−</button>' : '');
-  const relays = ids.map(id => S.lights.find(l => l.id === id)).filter(l => l && (l.relay || l.plug));
+  const relays = ids.map(id => S.lights.find(l => l.id === id)).filter(l => l && l.plug);
   $('#edStringRow').style.display = relays.length ? 'flex' : 'none';
   if (relays.length) $('#edString').value = relays[0].string || '#ffb46b';
   $('#edBri').value = L.bri; $('#edBriVal').textContent = L.bri + '%';
@@ -898,8 +890,9 @@ function renderDevices() {
   if (!focused) {
     box.innerHTML = S.devices.length ? S.devices.map(d => {
       const lights = S.lights.filter(l => l.device === d.id);
-      const what = d.kind === 'brmesh' ? (d.via === 'server' ? 'Server Bluetooth (TP-Link)' : 'ESP32 Bluetooth bridge') : d.kind === 'relay' ? `ESP32 relays · ${d.ch.length} channels` : d.kind === 'plug' ? `Smart plug · on/off only${d.hasKey ? '' : ' · needs local key'}` : (d.sku || 'Govee');
-      const state = !d.ip && d.via !== 'server' ? '<span class="state empty">No IP yet · preview only</span>'
+      const what = d.kind === 'brmesh' ? 'Server Bluetooth (TP-Link)' : d.kind === 'plug' ? `Smart plug · on/off only${d.hasKey ? '' : ' · needs local key'}` : (d.sku || 'Govee');
+      const set = d.kind === 'brmesh' ? d.via === 'server' : !!d.ip;
+      const state = !set ? `<span class="state empty">${d.kind === 'brmesh' ? 'Not connected yet' : 'No IP yet'} · preview only</span>`
         : d.lastSeen ? `<span class="state ok">${esc(what)} · ${ago(d.lastSeen)}</span>`
         : `<span class="state">${esc(what)} · ${ago(d.lastSeen)}</span>`;
       return `
@@ -907,18 +900,18 @@ function renderDevices() {
         <div class="pairdots">${lights.map(l => `<div class="dot" data-live="${esc(l.id)}" title="${esc(l.name)}"></div>`).join('')}</div>
         <div class="head"><input type="text" value="${esc(d.name)}" data-dname aria-label="Pair name">
           <select data-dzone aria-label="Zone">${S.zones.map(z => `<option value="${esc(z.id)}" ${z.id === d.zone ? 'selected' : ''}>${esc(z.name)}</option>`).join('')}</select>
-          ${d.kind === 'brmesh' ? '<span class="badge bt">BT</span>' : d.kind === 'relay' ? '<span class="badge c9">C9</span>' : d.kind === 'plug' ? '<span class="badge c9">PLUG</span>' : ''}<span class="badge ${d.ip ? 'ok' : ''}">${d.ip ? 'set' : 'empty'}</span></div>
+          ${d.kind === 'brmesh' ? '<span class="badge bt">BT</span>' : d.kind === 'plug' ? '<span class="badge c9">PLUG</span>' : ''}<span class="badge ${set ? 'ok' : ''}">${set ? 'set' : 'empty'}</span></div>
         <div class="ipline">
-          <input type="text" inputmode="decimal" placeholder="${d.kind === 'brmesh' || d.kind === 'relay' ? 'ESP32 IP' : d.kind === 'plug' ? 'Plug IP' : 'IP, e.g. 192.168.1.50'}" value="${esc(d.ip)}" data-dip aria-label="IP">
-          ${d.kind === 'brmesh' ? `<select data-dvia aria-label="Send via" style="width:auto;padding:8px"><option value="server" ${d.via === 'server' ? 'selected' : ''}>via server Bluetooth</option><option value="esp32" ${d.via !== 'server' ? 'selected' : ''}>via ESP32</option></select>` : ''}
-          ${d.kind === 'brmesh' || d.kind === 'relay' ? `<input type="text" value="${esc((d.kind === 'relay' ? d.ch : d.ble || []).join(', '))}" data-dnames aria-label="ESPHome names" title="${d.kind === 'relay' ? 'Relay channel names (one string group each)' : 'ESPHome light names'}" style="flex:1 1 150px;min-width:0;padding:8px 10px">` : ''}
+          ${d.kind === 'brmesh' ? `<select data-dvia aria-label="Connection" style="width:auto;padding:8px"><option value="server" ${d.via === 'server' ? 'selected' : ''}>Server Bluetooth</option><option value="none" ${d.via !== 'server' ? 'selected' : ''}>Not connected (spare)</option></select>
+            <input type="text" value="${esc((d.ble || []).map(n => n.replace(/^brmesh_/, '')).join(', '))}" data-dnames aria-label="BRMesh light ids" title="Light ids from the BRMesh app, e.g. 1, 2" style="flex:1 1 120px;min-width:0;padding:8px 10px">`
+          : `<input type="text" inputmode="decimal" placeholder="${d.kind === 'plug' ? 'Plug IP' : 'IP, e.g. 192.168.1.50'}" value="${esc(d.ip)}" data-dip aria-label="IP">`}
           ${d.kind === 'plug' ? `<input type="text" value="${esc(d.tuyaId || '')}" data-dtid placeholder="Device ID" aria-label="Tuya device ID" style="flex:1 1 150px;min-width:0;padding:8px 10px">
             <input type="password" value="" data-dtkey placeholder="${d.hasKey ? 'Local key saved' : 'Local key'}" aria-label="Tuya local key" autocomplete="off" style="flex:1 1 120px;min-width:0;padding:8px 10px">
             <select data-dtver aria-label="Protocol" style="width:auto;padding:8px">${['3.3', '3.4', '3.5', '3.1'].map(v => `<option ${v === (d.tuyaVersion || '3.3') ? 'selected' : ''}>${v}</option>`).join('')}</select>
             <input type="text" value="${esc(d.about || '')}" data-dabout placeholder="What it powers (for Qwen), e.g. laser projector: red &amp; green dots" aria-label="What it powers" style="flex:1 1 100%;min-width:0;padding:8px 10px">` : ''}
-          ${d.kind === 'brmesh' || d.kind === 'relay' || d.kind === 'plug' ? '' : `<select data-dsegs aria-label="Lights on it">${[1,2,3,4].map(k => `<option value="${k}" ${k === d.segments ? 'selected' : ''}>${k === 2 ? '2 lights' : k === 1 ? '1 light' : k + ' lights'}</option>`).join('')}</select>`}
+          ${d.kind === 'brmesh' || d.kind === 'plug' ? '' : `<select data-dsegs aria-label="Lights on it">${[1,2,3,4].map(k => `<option value="${k}" ${k === d.segments ? 'selected' : ''}>${k === 2 ? '2 lights' : k === 1 ? '1 light' : k + ' lights'}</option>`).join('')}</select>`}
           <button class="btn small" data-dsave>Save</button>
-          <button class="btn small" data-dprobe ${d.ip ? '' : 'disabled'}>Test</button>
+          <button class="btn small" data-dprobe ${set ? '' : 'disabled'}>Test</button>
           <button class="btn small" data-ddel aria-label="Remove pair">✕</button>
         </div>
         ${state}
@@ -1008,7 +1001,7 @@ function renderSandbox() {
   const Y = T && T.yard; if (!Y) return;
   $('#sbYard').innerHTML = '<div class="note" style="margin:0 0 6px">Sandbox yard</div>' + Y.zones.map(z => {
     const look = Y.looks.find(l => l.id === z.current);
-    return `<div class="sbz ${z.off ? 'off' : ''}"><b>${esc(z.name)}</b><div class="dots">${Y.lights.filter(l => l.zone === z.id).map(l => `<div class="dot" data-sblive="${esc(l.id)}" style="--idle:${esc(l.relay ? l.string || '#ffb46b' : l.palette[0])}"></div>`).join('')}</div><small>${z.off ? 'off' : look ? esc(look.name) : 'custom'}</small></div>`;
+    return `<div class="sbz ${z.off ? 'off' : ''}"><b>${esc(z.name)}</b><div class="dots">${Y.lights.filter(l => l.zone === z.id).map(l => `<div class="dot" data-sblive="${esc(l.id)}" style="--idle:${esc(l.plug ? l.string || '#ffb46b' : l.palette[0])}"></div>`).join('')}</div><small>${z.off ? 'off' : look ? esc(look.name) : 'custom'}</small></div>`;
   }).join('');
   paintSandbox(sbLive);
 }
@@ -1041,7 +1034,7 @@ function renderDirector() {
   if (document.activeElement !== $('#dirMin')) $('#dirMin').value = d.minutes;
   $('#dirNow').disabled = !d.enabled || d.thinking;
   $('#dirNow').textContent = d.thinking ? 'Thinking…' : 'Pick now';
-  $('#dirRecent').innerHTML = d.recent.map(r => `<div class="tl"><div class="grow"><b>${esc(r.name)}</b> ${r.area === 'back' ? 'out back' : 'out front'}<small>${esc(r.by === 'Qwen' ? r.why : 'picked from your ratings (Qwen unavailable)')} · ${new Date(r.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</small>${r.plugs ? `<small>${esc(r.plugs.join(' · '))}</small>` : ''}</div></div>`).join('')
+  $('#dirRecent').innerHTML = d.recent.map(r => `<div class="tl"><div class="grow"><b>${esc(r.name)}</b><small>${esc(r.by === 'Qwen' ? r.why : 'picked from your ratings (Qwen unavailable)')} · ${new Date(r.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</small>${r.plugs ? `<small>${esc(r.plugs.join(' · '))}</small>` : ''}</div></div>`).join('')
     + (d.enabled && d.nextAt ? `<p class="note">Next pick around ${new Date(d.nextAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.</p>` : d.enabled && !(S && S.running) ? '<p class="note">Starts when the lights are on.</p>' : '');
 }
 function renderWatch() {
@@ -1134,7 +1127,7 @@ $('#edSpeed').oninput = (e) => { editing = true; const s = toSpeed(+e.target.val
 const sendTrim = throttle((v) => patchSel({ trim: v }));
 $('#edTrim').oninput = (e) => { editing = true; $('#edTrimVal').textContent = e.target.value + '%'; sendTrim(+e.target.value); };
 ['#edBri', '#edSpeed', '#edTrim'].forEach(s => $(s).addEventListener('change', () => { editing = false; }));
-$('#edString').onchange = (e) => { const ids = targets().filter(id => { const l = S.lights.find(l => l.id === id) || {}; return l.relay || l.plug; }); if (ids.length) api('/api/lights', { ids, string: e.target.value }); };
+$('#edString').onchange = (e) => { const ids = targets().filter(id => { const l = S.lights.find(l => l.id === id) || {}; return l.plug; }); if (ids.length) api('/api/lights', { ids, string: e.target.value }); };
 $('#edOn').onclick = () => patchSel({ on: true });
 $('#edOff').onclick = () => patchSel({ on: false });
 $('#edIdent').onclick = () => { const ids = targets(); if (ids.length !== 1) return toast('Tick just one light to find it'); api('/api/lights/identify', { id: ids[0] }); };
@@ -1202,7 +1195,6 @@ $('#found').onclick = (e) => {
 $('#addPair').onclick = () => api('/api/devices', { segments: 2 });
 $('#addBle').onclick = () => api('/api/devices', { segments: 2, kind: 'brmesh' });
 $('#addPlug').onclick = () => api('/api/devices', { kind: 'plug', zone: S.zones.some(z => z.id === zoneSel) ? zoneSel : undefined });
-$('#addRelay').onclick = () => api('/api/devices', { segments: 8, kind: 'relay', zone: S.zones.some(z => z.id === zoneSel) ? zoneSel : undefined });
 $('#devices').addEventListener('change', (e) => { if (e.target.matches('[data-dzone]')) { const id = e.target.closest('[data-dev]').dataset.dev; e.target.blur(); api(`/api/devices/${id}`, { zone: e.target.value }); } });
 $('#devices').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('input')) { const box = e.target.closest('[data-dev]'); box.querySelector('[data-dsave]').click(); } });
 $('#devices').addEventListener('focusout', () => setTimeout(() => { if (!$('#devices').contains(document.activeElement)) renderDevices(); }, 0));
@@ -1213,12 +1205,12 @@ $('#devices').addEventListener('click', async (e) => {
     e.target.blur();
     const names = box.querySelector('[data-dnames]'), kind = (S.devices.find(d => d.id === id) || {}).kind;
     const extra = kind === 'plug' ? { tuyaId: box.querySelector('[data-dtid]').value, tuyaKey: box.querySelector('[data-dtkey]').value, tuyaVersion: box.querySelector('[data-dtver]').value, about: box.querySelector('[data-dabout]').value }
-      : names ? { [kind === 'relay' ? 'ch' : 'ble']: names.value } : { segments: +box.querySelector('[data-dsegs]').value };
-    const via = box.querySelector('[data-dvia]');
-    api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ip: box.querySelector('[data-dip]').value, ...extra, ...(via ? { via: via.value } : {}) });
+      : names ? { ble: names.value } : { segments: +box.querySelector('[data-dsegs]').value };
+    const via = box.querySelector('[data-dvia]'), ip = box.querySelector('[data-dip]');
+    api(`/api/devices/${id}`, { name: box.querySelector('[data-dname]').value, ...(ip ? { ip: ip.value } : {}), ...extra, ...(via ? { via: via.value } : {}) });
   }
   if (e.target.matches('[data-ddel]') && confirm('Remove this pair and its lights?')) api(`/api/devices/${id}`, null, 'DELETE');
-  if (e.target.matches('[data-dprobe]')) { e.target.textContent = '…'; const r = await api(`/api/devices/${id}/probe`); e.target.textContent = 'Test'; if (r) toast(r.status.plug ? `Plug answered: ${r.status.plug.on ? 'on' : 'off'}` : r.status.esp ? (r.status.ok ? 'ESP32 answered for every channel' : `ESP32: ${r.status.error}`) : r.status.ok ? `Answered: ${r.status.status.onOff ? 'on' : 'off'}, brightness ${r.status.status.brightness}` : 'No answer — check the IP and LAN Control'); }
+  if (e.target.matches('[data-dprobe]')) { e.target.textContent = '…'; const r = await api(`/api/devices/${id}/probe`); e.target.textContent = 'Test'; if (r) toast(r.status.plug ? `Plug answered: ${r.status.plug.on ? 'on' : 'off'}` : r.status.ble ? (r.status.ok ? 'Server Bluetooth is ready' : `Bluetooth: ${r.status.error || 'not ready'}`) : r.status.ok ? `Answered: ${r.status.status.onOff ? 'on' : 'off'}, brightness ${r.status.status.brightness}` : 'No answer — check the IP and LAN Control'); }
 });
 $('#order').addEventListener('click', (e) => {
   const o = S.lights.map(l => l.id);
@@ -1251,11 +1243,6 @@ async function ask(text) {
   asking = null; $('#askBtn').disabled = false; renderAi();
 }
 $('#askForm').onsubmit = (e) => { e.preventDefault(); ask($('#askText').value); };
-$('#ideas').onclick = (e) => {
-  const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.fill) { const i = $('#askText'); i.value = b.dataset.fill; i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
-  else ask(b.textContent);
-};
 $('#askMini').onsubmit = (e) => { e.preventDefault(); const t = $('#askMiniText').value; if (!t.trim()) return; $('#askMiniText').value = ''; document.querySelector('nav button[data-tab=elves]').click(); ask(t); };
 $('#talk').onclick = async (e) => {
   const p = e.target.closest('[data-play]'), d = e.target.closest('[data-dellook]');

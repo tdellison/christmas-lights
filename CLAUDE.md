@@ -10,7 +10,8 @@ Govee LAN, ptReal and queue rules apply.
   tick, sends only on change, at most one packet per device per tick, skips
   a device whose queue is busy. Also looks, rotate, schedule and the music
   feed.
-- Zones: `cfg.zones` (front-left, front-right, back) each with off, current
+- Zones: `cfg.zones` (front-left, front-right; no backyard, owner's
+  decision) each with off, current
   look, optional own schedule; devices have `zone`; `front` = both front
   zones. Effect groups are per zone. Govee scenes per zone need `d.mac`
   (from Scan → Use). The elves get the zone from the request words when
@@ -45,14 +46,14 @@ Govee LAN, ptReal and queue rules apply.
   appended after the built-in examples in every elves prompt. The scored test
   (14 requests) runs in-app; keep it passing when changing prompts.
 - Effects get `ctx.yard` (0..1 position across the light's AREA: both front
-  zones together, the backyard on its own) besides the per-zone `pos`;
-  `runner` uses it to cross the front yard. The backyard is its own show
-  (owner's decision): the Director picks it independently.
+  zones together) besides the per-zone `pos`; `runner` uses it to cross the
+  front yard.
 - Catalog / Watch / Director: `lib/catalog.js` (catalog.json: per look id
   up/down, tags, notes, sniffed flavor from data/sniff), `lib/watch.js`
-  (plays each show N min, pauses rotate), `lib/director.js` (Qwen picks front
-  + back every N min; code enforces 👎 never, front/back-only, no repeats,
-  Govee only where d.mac known; weighted fallback if Qwen fails). The
+  (plays each show N min, pauses rotate), `lib/director.js` (Qwen picks one
+  show for the whole yard every N min, `{show, why}`; code enforces 👎 never,
+  no repeats, Govee only where d.mac known; weighted fallback if Qwen fails).
+  Tags: cozy, energetic, kids, late night. The
   compact catalog goes in the LAST message only (elves: only for show-ish
   requests) to keep the prompt cache. Watch sniffs Govee shows (engine
   probeDevice ~4/s, `lib/flavor.js` summarize) into catalog flavor; server
@@ -66,18 +67,16 @@ Govee LAN, ptReal and queue rules apply.
 - `lib/goveeCloud.js`: Govee Platform API (cloud) for Govee scenes + app
   DIYs, offered to the engine as `govee:<kind>:<name>` looks. While one plays
   the engine sends nothing. Key in `secrets.json`, never in git or the UI.
-- `lib/esphome.js`: ESP32s running ESPHome, over REST. Device kinds:
-  `brmesh` (BLE lights via fastcon, `ble` = light names,
-  `deploy/esp32-brmesh.yaml`) and `relay` (C9 strings on SSRs, `ch` = switch
-  names, `deploy/esp32-relays.yaml`). Relay lights run effects on
-  white/black and are on when bright; `light.string` is preview colour only.
-  One command per entity per gap (lights 250 ms, switches 100 ms), none in flight.
 - `lib/blelocal.js`: BRMesh lights from the server's TP-Link adapter (hci by
   address 58:D8:12:36:D0:B5) via `hcitool cmd` legacy advertising (hcitool
-  has setcap). Device `brmesh` with `via: 'server'` (no ip). Every command is
+  has setcap). Device `brmesh` (no ip, `ble` = brmesh_N, N = BRMesh light
+  id): sent to only when `via: 'server'`; `via: 'none'` = spare slot,
+  preview only. Every command is
   sent at seq s and s+128 (lights accept only "newer" seq mod 256, shared
   with the BRMesh app); seq persisted in ble-seq.json. Newest wish per light,
-  ~150 ms per advert. The ESP32 path failed without its antenna.
+  ~150 ms per advert. The ESP32/ESPHome bridge and C9 relay boards were
+  removed 2026-11-16 (TP-Link works; owner can't splice); they're in git
+  history if ever needed.
 - `lib/tuya.js`: Tuya smart plugs via `tuyapi` (local). Device `kind: plug`,
   one light, on/off only (follows light.on + zone + show, ignores effects);
   min 4 s between switches, newest wish wins. `tuyaKey` is redacted from
@@ -100,9 +99,10 @@ Rules:
 - Fresh installs start with PAIR_SLOTS = 2 Govee pair slots (4 lights), no
   IPs; a slot with no IP is previewed but never sent to. Owner's yard: Pair 1
   (.216) + Pair 4 (.209), "Bluetooth pair" (via server), "Bluetooth spare"
-  (empty, via esp32, no IP, so never sent), C9 plug 1-4 (empty). Plug lights
+  (via none, never sent), C9 plug 1-4 (empty). Plug lights
   carry `ready` (ip + tuyaId + key) in status; the Director's askPlugs and
   the elves' plugLine skip plugs that aren't ready. trainTest builds its own
-  6-pair + Bluetooth yard (lights 1-6 front left, 7-12 front right) so scores
-  stay comparable; don't tie it to PAIR_SLOTS.
+  6-pair + Bluetooth yard (lights 1-6 front left, 7-12 front right, 13-14
+  Bluetooth); don't tie it to PAIR_SLOTS. Its zone requests use left/right
+  (no backyard) since 2026-11-16.
 - Owner prefers short answers and no prices.

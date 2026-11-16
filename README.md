@@ -1,6 +1,7 @@
 # Christmas Lights
 
-Christmas yard light controller for Govee lights over the LAN. Runs on the
+Christmas yard light controller for Govee lights over the LAN, BRMesh
+Bluetooth lights and Tuya smart plugs (C9s). Runs on the
 Ubuntu server, controlled from your phone. Lights only. Music is an option you
 can switch on later.
 
@@ -26,7 +27,7 @@ Auto-start: see `deploy/christmas-lights.service`.
    An empty slot (no IP, or a plug with no device ID / key) shows in the
    preview but is never sent to, and Qwen ignores empty plugs.
    More later: **Setup → + Add Govee pair / + Add Bluetooth pair / + Add
-   smart plug / + Add ESP32 relay board**.
+   smart plug**.
 3. Say how many lights are on each controller. A Spotlight 2 two-pack is
    **2**: one IP, two lights you control separately.
 4. Put the lights in yard order, left to right. Chases and waves follow it.
@@ -88,15 +89,14 @@ its two lights' spot settings.
 ## Zones
 
 The yard is split into **Front Left** and **Front Right** (Setup: pick each
-pair's zone). The Backyard zone was dropped (the T-Rex Santa lights it); the
-Bluetooth pair is in Front Left. `POST /api/zones-add {id, name}` brings a
-zone back, `POST /api/zones/<id>/remove {to}` removes one. **Front yard** means both front zones
+pair's zone). There's no backyard zone (the T-Rex Santa lights it); the
+Bluetooth pair is in Front Left. **Front yard** means both front zones
 together. Tap a zone under the yard picture (or its name above its lights)
 and the Lights and Looks tabs work on just that zone; **Whole yard** works on
 everything. Each zone has its own on/off switch and can have its own on/off
 times (Looks → Schedule). Auto-rotate can be limited to some zones ("Rotate
 in"). Chases and waves run within a zone. The elves understand zones:
-"candy cane out front, warm twinkle out back", "turn off the backyard".
+"candy cane on the left, snowfall on the right", "turn off the front right".
 
 A Govee scene can play in one zone only if the app knows which Govee lights
 are in it: add them with **Scan → Use** (that records their hardware id).
@@ -104,9 +104,10 @@ are in it: add them with **Scan → Use** (that records their hardware id).
 ## Bluetooth lights (BRMesh app)
 
 The two BRMesh lights are driven **from the server's TP-Link USB Bluetooth
-adapter** (Setup → Bluetooth pair → "via server Bluetooth"). An ESP32
-bridge (`deploy/esp32-brmesh.yaml`, flashed, static 192.168.1.50) also works
-but needs its antenna to reach; it's the spare option ("via ESP32").
+adapter** (Setup → Bluetooth pair → "Server Bluetooth", light ids 1, 2).
+The second Bluetooth slot is a spare for another set ("Not connected"):
+previewed, never sent to. (The old ESP32 bridge was removed; it's in git
+history before this change if ever needed.)
 
 How it works: the app builds the FastCon adverts itself (`tools/fastcon.js`,
 mesh key from `deploy/secrets.yaml`) and sends them with raw HCI legacy
@@ -118,25 +119,6 @@ half the counter apart. Each light updates ~2-3 times a second.
 One-time setup on a new server: `sudo setcap cap_net_raw,cap_net_admin+eip /usr/bin/hcitool`.
 The mesh key and light ids come from the BRMesh app on Android via
 `adb logcat` (look for `jyq_helper ... key:`; light ids are 1 and 2).
-Test script: `deploy/test-tplink-seq.sh` (sweeps all sequence numbers).
-
-## C9 strings on relays
-
-Plain C9 and string lights are switched by an ESP32 with a solid-state relay
-board (8 channels or more). Each channel is one group of strings: plug as
-many strands into it as the channel's rating allows (common SSR boards: 2 A,
-about 200 W; LED C9 strands draw roughly 0.1-0.2 A each).
-
-1. Fill in `deploy/secrets.yaml`, then with the ESP32 on USB:
-   `esphome run deploy/esp32-relays.yaml`. Wiring notes are at the top of it.
-2. App: **Setup → + Add C9 relay board**, type the ESP32's IP, pick its zone,
-   Save, Test. Each channel shows up as a light (C9 1, C9 2, ...).
-3. Lights tab: pick a channel and set its **C9 string colour** so the
-   preview looks like the real strings.
-
-Strings can only be on or off, so effects become on/off patterns: Chase and
-Alternate step across the channels, Twinkle/Sparkle/Snowfall pop strings on,
-Breathe and Fade blink slowly, and Music Pulse flashes on the beat.
 
 ## Smart plug (Tuya: Enbrighten, Smart Life)
 
@@ -195,7 +177,7 @@ ignores it) and never sent to the browser.
 
 **Looks → Watch & rate** plays every show in turn (choose minutes each and
 which shows; it uses the selected zone). For the one playing: **👍 / 👎**,
-tags (cozy, energetic, kids, late night, front-only, back-only) and a note.
+tags (cozy, energetic, kids, late night) and a note.
 Back / +1 min / Next / Stop. Auto-rotate pauses while watching. Everything
 goes into the show catalog (`catalog.json`), and look cards show their score
 and tags.
@@ -206,10 +188,10 @@ pass rates and catalogues. The colours of everything you 👍 become the **"Your
 Favourites" palette**, which Qwen designs and directs with ("design something
 in the style of my favourites") and you can pick in the light editor.
 
-**Looks → Director**: Qwen picks what plays out front and out back every N
+**Looks → Director**: Qwen picks what plays across the front yard every N
 minutes from that catalog, the time of night and what he played lately, and
 says why. Your hard rules are enforced in code: never a 👎 show,
-front-only/back-only respected, no recent repeats, Govee shows only where
+no recent repeats, Govee shows only where
 the app knows the Govee lights (Scan → Use). If he can't be reached, a
 weighted pick from your ratings covers that turn. It replaces auto-rotate.
 
@@ -221,15 +203,15 @@ cozy?").
 The **Elves** tab is a chat that runs on local Qwen 3 30B-A3B (nothing leaves
 the house). The box on the Lights tab sends to it too.
 
-- **Commands**: "candy cane out front, warm twinkle out back", "slower",
-  "turn off the backyard", "on at 4:30, off at 11". Follow-ups work ("more
-  red", "now do that out back").
+- **Commands**: "candy cane on the left, snowfall on the right", "slower",
+  "turn off the front right", "on at 4:30, off at 11". Follow-ups work ("more
+  red", "now do that on the left").
 - **Find shows**: "what snow shows do I have?" lists matches to tap and play.
   Show names play instantly ("Sleigh Ride", "play santa sleigh").
 - **Design**: "surprise me" or "design an icy blue show called Jack Frost".
   The elves build it as a saved look while the current show keeps playing,
   then offer **Play** and **Delete it**. Tweaks right after ("more white",
-  "make the backyard sparkle") change the design, not the yard. Designs take
+  "make the left side sparkle") change the design, not the yard. Designs take
   ~10-60 s; commands a few seconds.
 
 ### Training the elves
@@ -240,7 +222,7 @@ yard (shown above the chat); nothing reaches the real lights.
 - **👍** on a good answer saves it as an example they copy from then on.
 - **👎** asks what it should have done, redoes it, and a 👍 on the redo saves
   the corrected version.
-- **House notes**: "remember the backyard is the deck" (or the Add box).
+- **House notes**: "remember the trees by the window are the Bluetooth lights" (or the Add box).
 - **Keep it** copies a design made in training into the real Looks.
 - **Run test**: 14 everyday requests, each checked; shows the score so you
   can see whether teaching helped.
