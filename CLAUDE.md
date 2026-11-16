@@ -57,7 +57,11 @@ Govee LAN, ptReal and queue rules apply.
   compact catalog goes in the LAST message only (elves: only for show-ish
   requests) to keep the prompt cache. Watch sniffs Govee shows (engine
   probeDevice ~4/s, `lib/flavor.js` summarize) into catalog flavor; server
-  keeps PALETTES.favourites = colours of 👍 shows (flavor.favourites).
+  keeps PALETTES.favourites = colours of the 9 built-in looks (not rainbow,
+  max 8). House style: elves `styleLines()` and Director `system()` list each
+  built-in look's effect + colour words (fixed, cache-safe); no warm white /
+  amber / orange / gold unless asked (prompt + `isWarm` code guard swaps them
+  for white when the request has no WARM_WORDS).
 - `cfg.goveeCloud` (default false, owner's choice: those shows were made for
   roofline lights): server only creates the cloud client and passes
   `external` when true, so off = no cloud calls and no `govee:*` looks

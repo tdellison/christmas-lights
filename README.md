@@ -184,9 +184,15 @@ and tags.
 
 While a Govee show plays, Watch mode also **records its colours and pace**
 (it asks a spotlight its colour ~4×/s; the spotlight must be online), so one
-pass rates and catalogues. The colours of everything you 👍 become the **"Your
-Favourites" palette**, which Qwen designs and directs with ("design something
-in the style of my favourites") and you can pick in the light editor.
+pass rates and catalogues. The **"Your Favourites" palette** is the colours
+of your 9 looks (Rainbow Wheel aside): Qwen designs with it ("design
+something in the style of my favourites") and you can pick it in the light
+editor.
+
+**House style**: the elves and the Director are told what each of the 9
+looks is (effect and colours) and design in that flavour. Warm white, amber,
+orange and gold are off-scheme: the elves never use them unless you ask, and
+code swaps them for white if Qwen slips.
 
 **Looks → Director**: Qwen picks what plays across the front yard every N
 minutes from that catalog, the time of night and what he played lately, and

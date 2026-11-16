@@ -526,7 +526,7 @@
         <label class="switch"><input id="dirOn" type="checkbox"><span></span></label>
       </div>
       <p class="note" id="dirTonight" style="color:var(--warm)"></p>
-      <p class="note" id="dirNote">He chooses front and back from your 👍/👎, tags and notes (rate shows in Watch &amp; rate), the time of night and what he played lately. Never a 👎 show.</p>
+      <p class="note" id="dirNote">He picks the next show for the whole yard from your 👍/👎, tags and notes (rate shows in Watch &amp; rate), the time of night and what he played lately. Never a 👎 show.</p>
       <div id="dirRecent"></div>
       <div class="row" style="margin-top:8px"><button class="btn" id="dirNow">Pick now</button></div>
     </div>
@@ -1055,7 +1055,7 @@ function renderWatch() {
   $('#wFlavor').innerHTML = w.sniffing ? '🎨 Recording this show\'s colours…'
     : e.flavor ? (e.flavor.stuck ? 'The spotlight hides this show\'s colours.' : `Colours: ${e.flavor.colours.map(c => sw(c.hex)).join(' ')} · ${e.flavor.changesPerSecond >= 2 ? 'fast' : e.flavor.changesPerSecond >= 0.5 ? 'medium' : 'slow'}`) : '';
   const fav = S.palettes.find(p => p.id === 'favourites');
-  $('#wFav').innerHTML = fav ? `Your favourite colours so far: ${fav.colors.map(sw).join(' ')}` : '';
+  $('#wFav').innerHTML = fav ? `Your favourite colours (from your 9 looks): ${fav.colors.map(sw).join(' ')}` : '';
   tickWatch();
 }
 function tickWatch() {

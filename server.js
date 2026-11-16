@@ -81,11 +81,11 @@ const training = createTraining({ file: path.join(__dirname, 'training.json'), l
 // Show catalog (ratings, tags, notes, sniffed flavor) and Watch mode.
 const SNIFF_DIR = path.join(__dirname, 'data', 'sniff');
 const { PALETTES } = require('./lib/effects');
-const { favourites } = require('./lib/flavor');
-// "Your Favourites" palette: the colours of everything the owner 👍'd. Kept up
-// to date as shows are rated or sniffed; the elves and Director design with it.
+// "Your Favourites" palette: the colours of the owner's 9 built-in looks (their
+// scheme; Rainbow Wheel left out), at most 8. The elves and Director design with it.
 function updateFavourites() {
-  const cols = favourites(catalog.all(), engine.status().looks, PALETTES);
+  const cols = [...new Set(engine.status().looks.filter(l => l.builtin && !l.govee && l.palette && l.palette !== 'rainbow' && l.palette !== 'favourites')
+    .flatMap(l => (PALETTES[l.palette] || { colors: [] }).colors))].slice(0, 8);
   const had = JSON.stringify(PALETTES.favourites && PALETTES.favourites.colors);
   if (cols.length >= 2) PALETTES.favourites = { name: 'Your Favourites', colors: cols };
   else delete PALETTES.favourites;
